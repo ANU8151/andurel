@@ -232,6 +232,10 @@ func (fm *UnifiedManager) runSQLCCommand(rootDir, command string) error {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			fmt.Printf("Warning: sqlc binary not found at %s, skipping SQL code generation\n", sqlcBin)
+			return nil
+		}
 		return &FileOperationError{
 			Operation: "sqlc_" + command,
 			Path:      rootDir,
