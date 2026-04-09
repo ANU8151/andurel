@@ -45,12 +45,13 @@ func TestMultiMigrationHandling(t *testing.T) {
 				t.Fatalf("Failed to create models directory: %v", err)
 			}
 
-			originalWd, _ := os.Getwd()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			if err := os.Chdir(tempDir); err != nil {
+				t.Fatalf("Failed to change directory: %v", err)
+			}
 
-			migrationsDir := filepath.Join(originalWd, "testdata", "migrations", tt.migrationsDir)
+			migrationsDir := filepath.Join(oldWd, "testdata", "migrations", tt.migrationsDir)
 
 			generator := NewGenerator(tt.databaseType)
 

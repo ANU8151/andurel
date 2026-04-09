@@ -1235,53 +1235,6 @@ func (g *Generator) determineFactoryDefault(fieldName, goType, sqlcType string) 
 	return fmt.Sprintf("%s{}", goType)
 }
 
-func (g *Generator) stringFactoryDefault(fieldName string) string {
-	lower := strings.ToLower(fieldName)
-
-	// Field name heuristics
-	switch {
-	case lower == "email":
-		return "faker.Email()"
-	case lower == "name" || strings.HasSuffix(lower, "name"):
-		return "faker.Name()"
-	case lower == "phone" || strings.Contains(lower, "phone"):
-		return "faker.Phonenumber()"
-	case lower == "url" || strings.Contains(lower, "url"):
-		return "faker.URL()"
-	case lower == "description" || strings.HasSuffix(lower, "description"):
-		return "faker.Sentence()"
-	case lower == "title" || strings.HasSuffix(lower, "title"):
-		return "faker.Word()"
-	case lower == "address" || strings.Contains(lower, "address"):
-		return "faker.GetRealAddress().Address"
-	case lower == "city":
-		return "faker.GetRealAddress().City"
-	case lower == "country":
-		return "faker.GetRealAddress().Country"
-	case lower == "zipcode" || lower == "postalcode":
-		return "faker.GetRealAddress().PostalCode"
-	case strings.Contains(lower, "color"):
-		return "faker.GetRandomColor()"
-	default:
-		return "faker.Word()"
-	}
-}
-
-func (g *Generator) intFactoryDefault(fieldName string) string {
-	lower := strings.ToLower(fieldName)
-
-	switch {
-	case strings.Contains(lower, "price") || strings.Contains(lower, "amount"):
-		return "faker.RandomInt(100, 10000)" // Price in cents
-	case strings.Contains(lower, "count") || strings.Contains(lower, "quantity"):
-		return "faker.RandomInt(1, 100)"
-	case strings.Contains(lower, "age"):
-		return "faker.RandomInt(18, 80)"
-	default:
-		return "faker.RandomInt(1, 1000)"
-	}
-}
-
 func (g *Generator) getFactoryGoZero(goType string) string {
 	switch goType {
 	case "string":

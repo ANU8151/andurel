@@ -55,7 +55,7 @@ func setupModelManagerTest(t *testing.T) (*ModelManager, func()) {
 	}
 
 	return coord.ModelManager, func() {
-		os.Chdir(originalDir)
+		_ = os.Chdir(originalDir)
 		cache.ClearFileSystemCache()
 	}
 }

@@ -946,7 +946,7 @@ func initializeGit(targetDir string) error {
 
 func generateRandomHex(bytes int) string {
 	randomBytes := make([]byte, bytes)
-	rand.Read(randomBytes)
+	_, _ = rand.Read(randomBytes)
 	return hex.EncodeToString(randomBytes)
 }
 

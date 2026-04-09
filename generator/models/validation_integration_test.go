@@ -31,13 +31,13 @@ func TestModelFileGeneration_ValidPrimaryKeyTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tempDir := t.TempDir()
-			originalWd, _ := os.Getwd()
-
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			if err := os.Chdir(tempDir); err != nil {
+				t.Fatalf("Failed to change directory: %v", err)
+			}
 
-			migrationsDir := filepath.Join(originalWd, "testdata", "migrations", tt.migrationsDir)
+			migrationsDir := filepath.Join(oldWd, "testdata", "migrations", tt.migrationsDir)
 
 			generator := NewGenerator(tt.databaseType)
 
@@ -93,8 +93,8 @@ func TestRefreshQueries__ValidatesIDColumns(t *testing.T) {
 
 			originalWd, _ := os.Getwd()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tempDir)
 
 			migrationsDir := filepath.Join(originalWd, "testdata", "migrations", tt.migrationsDir)
 			sqlPath := filepath.Join(queriesDir, tt.tableName+".sql")

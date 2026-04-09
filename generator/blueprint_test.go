@@ -18,17 +18,33 @@ func (m *MockFileManager) RunSQLCGenerate() error {
 func TestBlueprintLifecycle(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change to temp directory: %v", err)
+	}
 
 	// Create a minimal project structure
-	os.MkdirAll("database/migrations", 0755)
-	os.MkdirAll("models", 0755)
-	os.MkdirAll("controllers", 0755)
-	os.WriteFile("controllers/controller.go", []byte("package controllers\n"), 0644)
-	os.MkdirAll("views", 0755)
-	os.MkdirAll("router/routes", 0755)
-	os.WriteFile("go.mod", []byte("module testapp\n\ngo 1.21\n"), 0644)
+	if err := os.MkdirAll("database/migrations", 0755); err != nil {
+		t.Fatalf("Failed to create migrations dir: %v", err)
+	}
+	if err := os.MkdirAll("models", 0755); err != nil {
+		t.Fatalf("Failed to create models dir: %v", err)
+	}
+	if err := os.MkdirAll("controllers", 0755); err != nil {
+		t.Fatalf("Failed to create controllers dir: %v", err)
+	}
+	if err := os.WriteFile("controllers/controller.go", []byte("package controllers\n"), 0644); err != nil {
+		t.Fatalf("Failed to write controller file: %v", err)
+	}
+	if err := os.MkdirAll("views", 0755); err != nil {
+		t.Fatalf("Failed to create views dir: %v", err)
+	}
+	if err := os.MkdirAll("router/routes", 0755); err != nil {
+		t.Fatalf("Failed to create routes dir: %v", err)
+	}
+	if err := os.WriteFile("go.mod", []byte("module testapp\n\ngo 1.21\n"), 0644); err != nil {
+		t.Fatalf("Failed to write go.mod: %v", err)
+	}
 	
 	// Create a minimal sqlc.yaml
 	sqlcYaml := `version: "2"
@@ -41,8 +57,12 @@ sql:
         package: "db"
         out: "models/internal/db"
 `
-	os.MkdirAll("database/queries", 0755)
-	os.WriteFile("database/sqlc.yaml", []byte(sqlcYaml), 0644)
+	if err := os.MkdirAll("database/queries", 0755); err != nil {
+		t.Fatalf("Failed to create queries dir: %v", err)
+	}
+	if err := os.WriteFile("database/sqlc.yaml", []byte(sqlcYaml), 0644); err != nil {
+		t.Fatalf("Failed to write sqlc.yaml: %v", err)
+	}
 
 	// Create andurel.yaml (config)
 	andurelYaml := `project:
@@ -57,7 +77,9 @@ paths:
   views: views
   routes: router/routes
 `
-	os.WriteFile("andurel.yaml", []byte(andurelYaml), 0644)
+	if err := os.WriteFile("andurel.yaml", []byte(andurelYaml), 0644); err != nil {
+		t.Fatalf("Failed to write andurel.yaml: %v", err)
+	}
 
 	// Create draft.yaml
 	draftYaml := `models:
@@ -69,7 +91,9 @@ controllers:
   Post:
     resource: true
 `
-	os.WriteFile("draft.yaml", []byte(draftYaml), 0644)
+	if err := os.WriteFile("draft.yaml", []byte(draftYaml), 0644); err != nil {
+		t.Fatalf("Failed to write draft.yaml: %v", err)
+	}
 
 	// Run generation
 	coordinator, err := NewCoordinator()

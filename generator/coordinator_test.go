@@ -38,7 +38,7 @@ func setupTestProject(t *testing.T) (string, func()) {
 	}
 
 	cleanup := func() {
-		os.Chdir(originalDir)
+		_ = os.Chdir(originalDir)
 		cache.ClearFileSystemCache()
 	}
 

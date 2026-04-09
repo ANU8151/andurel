@@ -38,7 +38,7 @@ func setupGeneratorTest(t *testing.T) func() {
 	}
 
 	return func() {
-		os.Chdir(originalDir)
+		_ = os.Chdir(originalDir)
 		cache.ClearFileSystemCache()
 	}
 }
