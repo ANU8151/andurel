@@ -347,6 +347,10 @@ func (g *Generator) formatTemplFile(filePath string) error {
 	cmd := exec.Command(templBin, "fmt", filePath)
 
 	if err := cmd.Run(); err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			fmt.Printf("Warning: templ binary not found at %s, skipping view formatting\n", templBin)
+			return nil
+		}
 		return fmt.Errorf("failed to run templ fmt on %s: %w", filePath, err)
 	}
 
@@ -364,6 +368,10 @@ func (g *Generator) runCompileTemplates() error {
 	cmd.Dir = rootDir
 
 	if err := cmd.Run(); err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			fmt.Printf("Warning: templ binary not found at %s, skipping template compilation\n", templBin)
+			return nil
+		}
 		return fmt.Errorf("failed to run templ generate: %w", err)
 	}
 	return nil

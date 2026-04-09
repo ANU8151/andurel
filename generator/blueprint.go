@@ -16,6 +16,8 @@ const manifestFileName = ".blueprint.json"
 type Blueprint struct {
 	Models      map[string]map[string]string         `yaml:"models"`
 	Controllers map[string]BlueprintControllerConfig `yaml:"controllers"`
+	Views       map[string]bool                      `yaml:"views"`
+	Routes      map[string]string                    `yaml:"routes"`
 }
 
 type BlueprintControllerConfig struct {
@@ -139,6 +141,38 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 		}
 	}
 
+	// 4. Generate standalone Views
+	for modelName, active := range bp.Views {
+		if !active {
+			continue
+		}
+		
+		if err := bm.viewManager.GenerateViewFromModel(modelName, false); err != nil {
+			return fmt.Errorf("failed to generate standalone views for %s: %w", modelName, err)
+		}
+		
+		tableName := naming.DeriveTableName(modelName)
+		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"))
+	}
+
+	// 5. Generate standalone Routes
+	for modelName, routeType := range bp.Routes {
+		if routeType != "resource" {
+			continue
+		}
+
+		tableName := naming.DeriveTableName(modelName)
+		// We'll use the controller manager but only for route generation logic
+		// (Currently Andurel ties them together, so we'll generate standard resource routes)
+		if err := bm.controllerManager.GenerateControllerFromModel(modelName, false); err != nil {
+			return fmt.Errorf("failed to generate routes for %s: %w", modelName, err)
+		}
+
+		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Controllers, tableName+".go"))
+		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Routes, tableName+".go"))
+		bm.addGeneratedFile(filepath.Join("router", "connect_"+tableName+"_routes.go"))
+	}
+
 	return bm.saveManifest()
 }
 
@@ -172,13 +206,20 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 		return fmt.Errorf("failed to parse blueprint YAML: %w", err)
 	}
 
-	// 1. Erase Controllers and Views
-	for controllerName := range bp.Controllers {
-		tableName := naming.DeriveTableName(controllerName)
+	// 1. Erase Controllers and explicit Routes
+	controllersToErase := make(map[string]bool)
+	for name := range bp.Controllers {
+		controllersToErase[name] = true
+	}
+	for name := range bp.Routes {
+		controllersToErase[name] = true
+	}
+
+	for name := range controllersToErase {
+		tableName := naming.DeriveTableName(name)
 		
 		filesToRemove := []string{
 			filepath.Join(bm.config.Paths.Controllers, tableName+".go"),
-			filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"),
 			filepath.Join(bm.config.Paths.Routes, tableName+".go"),
 			filepath.Join("router", "connect_"+tableName+"_routes.go"),
 		}
@@ -190,15 +231,24 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 		}
 	}
 
-	// 2. Erase Models and Queries
-	for modelName := range bp.Models {
-		tableName := naming.DeriveTableName(modelName)
-		snakeName := naming.ToSnakeCase(modelName)
+	// 2. Erase Models, Queries and Views
+	modelsToErase := make(map[string]bool)
+	for name := range bp.Models {
+		modelsToErase[name] = true
+	}
+	for name := range bp.Views {
+		modelsToErase[name] = true
+	}
+
+	for name := range modelsToErase {
+		tableName := naming.DeriveTableName(name)
+		snakeName := naming.ToSnakeCase(name)
 
 		filesToRemove := []string{
 			filepath.Join(bm.config.Paths.Models, snakeName+".go"),
 			filepath.Join(bm.config.Paths.Models, "factories", snakeName+".go"),
 			filepath.Join(bm.config.Paths.Queries, tableName+".sql"),
+			filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"),
 		}
 
 		for _, f := range filesToRemove {

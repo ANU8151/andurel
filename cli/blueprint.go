@@ -43,6 +43,12 @@ func newBlueprintInitCommand() *cobra.Command {
 controllers:
   Post:
     resource: true
+
+views:
+  Post: true
+
+routes:
+  Post: resource
 `
 			if _, err := os.Stat("draft.yaml"); err == nil {
 				return fmt.Errorf("draft.yaml already exists")
