@@ -49,6 +49,16 @@ controllers:
     stats:
       fragment: true
       render: PostStats
+
+jobs:
+  ProcessVideo:
+    queue: media
+    priority: 1
+
+mailables:
+  WelcomeEmail:
+    subject: "Welcome to Andurel"
+    from: "noreply@andurel.com"
 `
 			if _, err := os.Stat("draft.yaml"); err == nil {
 				return fmt.Errorf("draft.yaml already exists")

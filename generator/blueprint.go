@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/mbvlabs/andurel/generator/controllers"
+	"github.com/mbvlabs/andurel/generator/templates"
 	"github.com/mbvlabs/andurel/pkg/naming"
 	"gopkg.in/yaml.v3"
 )
@@ -17,6 +18,18 @@ const manifestFileName = ".blueprint.json"
 type Blueprint struct {
 	Models      map[string]map[string]string         `yaml:"models"`
 	Controllers map[string]BlueprintControllerConfig `yaml:"controllers"`
+	Jobs        map[string]BlueprintJobConfig        `yaml:"jobs"`
+	Mailables   map[string]BlueprintMailableConfig   `yaml:"mailables"`
+}
+
+type BlueprintJobConfig struct {
+	Queue    string `yaml:"queue"`
+	Priority int    `yaml:"priority"`
+}
+
+type BlueprintMailableConfig struct {
+	Subject string `yaml:"subject"`
+	From    string `yaml:"from"`
 }
 
 type BlueprintControllerConfig struct {
@@ -186,7 +199,94 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 		}
 	}
 
+	// 4. Generate standalone Views
+	// (Previously removed standalone loops, but now we have Jobs and Mailables)
+
+	// 4. Generate Jobs
+	for jobName, jobConfig := range bp.Jobs {
+		if err := bm.generateJob(jobName, jobConfig); err != nil {
+			return fmt.Errorf("failed to generate job %s: %w", jobName, err)
+		}
+	}
+
+	// 5. Generate Mailables
+	for mailName, mailConfig := range bp.Mailables {
+		if err := bm.generateMailable(mailName, mailConfig); err != nil {
+			return fmt.Errorf("failed to generate mailable %s: %w", mailName, err)
+		}
+	}
+
 	return bm.saveManifest()
+}
+
+func (bm *BlueprintManager) generateJob(name string, config BlueprintJobConfig) error {
+	snakeName := naming.ToSnakeCase(name)
+	jobPath := filepath.Join("queue", "jobs", snakeName+".go")
+
+	if err := os.MkdirAll(filepath.Join("queue", "jobs"), 0755); err != nil {
+		return err
+	}
+
+	data := struct {
+		Name       string
+		Kind       string
+		Package    string
+		ModulePath string
+	}{
+		Name:       name,
+		Kind:       snakeName,
+		Package:    "jobs",
+		ModulePath: bm.config.Project.ModulePath,
+	}
+
+	service := templates.GetGlobalTemplateService()
+	content, err := service.RenderTemplate("job.tmpl", data)
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(jobPath, []byte(content), 0644); err != nil {
+		return err
+	}
+
+	bm.addGeneratedFile(jobPath)
+	fmt.Printf("✓ Created job: %s\n", jobPath)
+	return nil
+}
+
+func (bm *BlueprintManager) generateMailable(name string, config BlueprintMailableConfig) error {
+	snakeName := naming.ToSnakeCase(name)
+	mailPath := filepath.Join("email", snakeName+".templ")
+
+	if err := os.MkdirAll("email", 0755); err != nil {
+		return err
+	}
+
+	data := struct {
+		Name       string
+		Subject    string
+		From       string
+		ModulePath string
+	}{
+		Name:       name,
+		Subject:    config.Subject,
+		From:       config.From,
+		ModulePath: bm.config.Project.ModulePath,
+	}
+
+	service := templates.GetGlobalTemplateService()
+	content, err := service.RenderTemplate("mailable.tmpl", data)
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(mailPath, []byte(content), 0644); err != nil {
+		return err
+	}
+
+	bm.addGeneratedFile(mailPath)
+	fmt.Printf("✓ Created mailable: %s\n", mailPath)
+	return nil
 }
 
 func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
@@ -265,6 +365,24 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 					}
 				}
 			}
+		}
+	}
+
+	// 3. Erase Jobs
+	for jobName := range bp.Jobs {
+		snakeName := naming.ToSnakeCase(jobName)
+		path := filepath.Join("queue", "jobs", snakeName+".go")
+		if err := os.Remove(path); err == nil {
+			fmt.Printf("✓ Removed job: %s\n", path)
+		}
+	}
+
+	// 4. Erase Mailables
+	for mailName := range bp.Mailables {
+		snakeName := naming.ToSnakeCase(mailName)
+		path := filepath.Join("email", snakeName+".templ")
+		if err := os.Remove(path); err == nil {
+			fmt.Printf("✓ Removed mailable: %s\n", path)
 		}
 	}
 

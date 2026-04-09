@@ -1,0 +1,33 @@
+package {{.Package}}
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/riverqueue/river"
+	"{{.ModulePath}}/internal/storage"
+)
+
+type {{.Name}}Args struct {
+	// Add your job arguments here
+	ID string `json:"id"`
+}
+
+func ({{.Name}}Args) Kind() string { return "{{.Kind}}" }
+
+type {{.Name}}Worker struct {
+	river.WorkerDefaults[{{.Name}}Args]
+	db storage.Pool
+}
+
+func New{{.Name}}Worker(db storage.Pool) *{{.Name}}Worker {
+	return &{{.Name}}Worker{
+		db: db,
+	}
+}
+
+func (w *{{.Name}}Worker) Work(ctx context.Context, job *river.Job[{{.Name}}Args]) error {
+	fmt.Printf("Working on {{.Name}} with ID: %s\n", job.Args.ID)
+	// Add your job logic here
+	return nil
+}

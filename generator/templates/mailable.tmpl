@@ -1,0 +1,45 @@
+package email
+
+import (
+	"context"
+	"fmt"
+
+	"{{.ModulePath}}/email/layouts"
+)
+
+type {{.Name}}Data struct {
+	// Add your template data here
+	Name string
+}
+
+templ {{.Name}}({{.Name | ToLower}} {{.Name}}Data) {
+	@layouts.Base("{{.Subject}}") {
+		<h1>Hello, { {{.Name | ToLower}}.Name }!</h1>
+		<p>This is a generated email from Andurel Blueprint.</p>
+	}
+}
+
+func Send{{.Name}}(
+	ctx context.Context,
+	to string,
+	data {{.Name}}Data,
+	sender TransactionalSender,
+) error {
+	htmlBody, err := renderComponent({{.Name}}(data))
+	if err != nil {
+		return fmt.Errorf("failed to render {{.Name}} email: %w", err)
+	}
+
+	textBody, err := HTMLToText(htmlBody)
+	if err != nil {
+		textBody = "Please view this email in an HTML-compatible client."
+	}
+
+	return SendTransactional(ctx, TransactionalData{
+		To:       to,
+		From:     "{{.From}}",
+		Subject:  "{{.Subject}}",
+		HTMLBody: htmlBody,
+		TextBody: textBody,
+	}, sender)
+}
