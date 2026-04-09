@@ -20,6 +20,7 @@ type TemplateData struct {
 	TokenSigningKey      string
 	Pepper               string
 	Extensions           []string
+	Hypermedia           string
 	RunToolVersion       string // Version of the run built tool
 
 	// Blueprint holds the structured scaffold configuration

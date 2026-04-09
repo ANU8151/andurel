@@ -7,6 +7,7 @@ import (
 
 	"github.com/mbvlabs/andurel/generator/files"
 	"github.com/mbvlabs/andurel/generator/internal/catalog"
+	"github.com/mbvlabs/andurel/layout"
 	"github.com/mbvlabs/andurel/pkg/constants"
 	"github.com/mbvlabs/andurel/pkg/naming"
 )
@@ -46,6 +47,14 @@ func (fg *FileGenerator) GenerateController(
 		return fmt.Errorf("controller file %s already exists", controllerPath)
 	}
 
+	// Detect hypermedia from lock file
+	hypermedia := "none"
+	if rootDir, err := fg.fileManager.FindGoModRoot(); err == nil {
+		if lock, err := layout.ReadLockFile(rootDir); err == nil && lock.ScaffoldConfig != nil {
+			hypermedia = lock.ScaffoldConfig.Hypermedia
+		}
+	}
+
 	generator := NewGenerator(databaseType)
 	controller, err := generator.Build(cat, Config{
 		ResourceName:        resourceName,
@@ -56,6 +65,7 @@ func (fg *FileGenerator) GenerateController(
 		ControllerType:      controllerType,
 		TableNameOverridden: tableNameOverridden,
 		Methods:             methods,
+		Hypermedia:          hypermedia,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to build controller: %w", err)

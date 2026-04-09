@@ -48,6 +48,7 @@ type GeneratedController struct {
 	IDType              string // "uuid.UUID", "int32", "int64", "string"
 	IsAutoIncrementID   bool   // True for serial/bigserial
 	Methods             []MethodConfig
+	Hypermedia          string // "datastar", "htmx", or "none"
 }
 
 type Config struct {
@@ -60,6 +61,7 @@ type Config struct {
 	ControllerType      ControllerType
 	TableNameOverridden bool
 	Methods             []MethodConfig
+	Hypermedia          string
 }
 
 type Generator struct {
@@ -95,6 +97,7 @@ func (g *Generator) Build(cat *catalog.Catalog, config Config) (*GeneratedContro
 		Fields:              make([]GeneratedField, 0),
 		IDType:              "uuid.UUID", // Default to UUID
 		Methods:             config.Methods,
+		Hypermedia:          config.Hypermedia,
 	}
 
 	if config.ControllerType == ResourceController ||

@@ -35,7 +35,7 @@ var (
 )
 
 func Scaffold(
-	targetDir, projectName, database, cssFramework, version string,
+	targetDir, projectName, database, cssFramework, hypermedia, version string,
 	extensionNames []string,
 ) error {
 	fmt.Printf("Scaffolding new project in %s...\n", targetDir)
@@ -48,6 +48,7 @@ func Scaffold(
 		ModuleName:           moduleName,
 		Database:             database,
 		CSSFramework:         cssFramework,
+		Hypermedia:           hypermedia,
 		GoVersion:            goVersion,
 		SessionKey:           generateRandomHex(64),
 		SessionEncryptionKey: generateRandomHex(32),
@@ -102,6 +103,7 @@ func Scaffold(
 		ProjectName:  projectName,
 		Database:     database,
 		CSSFramework: cssFramework,
+		Hypermedia:   hypermedia,
 		Extensions:   extensionNames,
 	}
 	if err := generateLockFile(targetDir, version, templateData.CSSFramework == "tailwind", scaffoldConfig); err != nil {
