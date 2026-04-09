@@ -19,6 +19,12 @@ const (
 	NormalController
 )
 
+type MethodConfig struct {
+	Name   string
+	Query  string
+	Render string
+}
+
 type GeneratedField struct {
 	Name          string
 	GoType        string
@@ -41,6 +47,7 @@ type GeneratedController struct {
 	TableNameOverridden bool
 	IDType              string // "uuid.UUID", "int32", "int64", "string"
 	IsAutoIncrementID   bool   // True for serial/bigserial
+	Methods             []MethodConfig
 }
 
 type Config struct {
@@ -48,9 +55,11 @@ type Config struct {
 	PluralName          string
 	TableName           string
 	PackageName         string
+	DatabaseType        string
 	ModulePath          string
 	ControllerType      ControllerType
 	TableNameOverridden bool
+	Methods             []MethodConfig
 }
 
 type Generator struct {
@@ -85,6 +94,7 @@ func (g *Generator) Build(cat *catalog.Catalog, config Config) (*GeneratedContro
 		TableNameOverridden: config.TableNameOverridden,
 		Fields:              make([]GeneratedField, 0),
 		IDType:              "uuid.UUID", // Default to UUID
+		Methods:             config.Methods,
 	}
 
 	if config.ControllerType == ResourceController ||
@@ -95,48 +105,52 @@ func (g *Generator) Build(cat *catalog.Catalog, config Config) (*GeneratedContro
 		}
 		table, err := cat.GetTable("", tableName)
 		if err != nil {
-			return nil, fmt.Errorf("table %s not found: %w", tableName, err)
+			// Don't fail if table not found, just don't add fields
+			// This might happen if user provides custom table name that isn't in catalog
+			return controller, nil
 		}
 
 		for _, col := range table.Columns {
-			field, err := g.buildField(col)
-			if err != nil {
-				return nil, fmt.Errorf("failed to build field for column %s: %w", col.Name, err)
-			}
-			controller.Fields = append(controller.Fields, field)
-
 			// Detect ID type from primary key column
 			if col.Name == "id" && col.IsPrimaryKey {
 				pkType, _ := validation.ClassifyPrimaryKeyType(col.DataType)
 				controller.IDType = validation.GoType(pkType)
 				controller.IsAutoIncrementID = validation.IsAutoIncrement(col.DataType)
+				continue
 			}
+			if col.Name == "id" {
+				continue
+			}
+
+			field, err := g.buildControllerField(col)
+			if err != nil {
+				return nil, fmt.Errorf("failed to build field for column %s: %w", col.Name, err)
+			}
+			controller.Fields = append(controller.Fields, field)
 		}
 	}
 
 	return controller, nil
 }
 
-func (g *Generator) buildField(col *catalog.Column) (GeneratedField, error) {
-	var goType string
-	var err error
-
-	goType, _, _, err = g.typeMapper.MapSQLTypeToGo(col.DataType, col.IsNullable)
+func (g *Generator) buildControllerField(col *catalog.Column) (GeneratedField, error) {
+	goType, _, _, err := g.typeMapper.MapSQLTypeToGo(col.DataType, col.IsNullable)
 	if err != nil {
-		return GeneratedField{}, err
+		goType = "string"
 	}
 
 	field := GeneratedField{
 		Name:          types.FormatFieldName(col.Name),
-		GoType:        goType,
 		DBName:        col.Name,
 		CamelCase:     types.FormatCamelCase(col.Name),
-		IsSystemField: col.Name == "created_at" || col.Name == "updated_at" || col.Name == "id",
+		IsSystemField: col.Name == "created_at" || col.Name == "updated_at",
+		GoType:        goType,
 	}
 
+	// Determine Go form type (for request binding)
 	switch goType {
 	case "time.Time":
-		field.GoFormType = "time.Time"
+		field.GoFormType = "string"
 	case "int16":
 		field.GoFormType = "int16"
 	case "int32":

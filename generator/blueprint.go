@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mbvlabs/andurel/generator/controllers"
 	"github.com/mbvlabs/andurel/pkg/naming"
 	"gopkg.in/yaml.v3"
 )
@@ -21,8 +22,14 @@ type Blueprint struct {
 }
 
 type BlueprintControllerConfig struct {
-	Resource bool  `yaml:"resource"`
-	Views    *bool `yaml:"views"` // Use pointer to distinguish between missing and false
+	Resource bool                       `yaml:"resource"`
+	Views    *bool                      `yaml:"views"`
+	Methods  map[string]BlueprintMethod `yaml:",inline"`
+}
+
+type BlueprintMethod struct {
+	Query  string `yaml:"query"`
+	Render string `yaml:"render"`
 }
 
 type BlueprintManifest struct {
@@ -132,16 +139,25 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 			withViews = *config.Views
 		}
 
-		if config.Resource {
-			if err := bm.controllerManager.GenerateControllerFromModel(controllerName, withViews); err != nil {
-				return fmt.Errorf("failed to generate resource controller %s: %w", controllerName, err)
+		methods := make([]controllers.MethodConfig, 0)
+		for methodName, methodConf := range config.Methods {
+			methods = append(methods, controllers.MethodConfig{
+				Name:   methodName,
+				Query:  methodConf.Query,
+				Render: methodConf.Render,
+			})
+		}
+
+		if config.Resource || len(methods) > 0 {
+			if err := bm.controllerManager.GenerateControllerFromModel(controllerName, withViews, methods); err != nil {
+				return fmt.Errorf("failed to generate controller %s: %w", controllerName, err)
 			}
 
 			tableName := naming.DeriveTableName(controllerName)
 			bm.addGeneratedFile(filepath.Join(bm.config.Paths.Controllers, tableName+".go"))
 			bm.addGeneratedFile(filepath.Join(bm.config.Paths.Routes, tableName+".go"))
 			bm.addGeneratedFile(filepath.Join("router", "connect_"+tableName+"_routes.go"))
-			
+
 			if withViews {
 				bm.addGeneratedFile(filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"))
 			}
@@ -153,11 +169,11 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 		if !active {
 			continue
 		}
-		
+
 		if err := bm.viewManager.GenerateViewFromModel(modelName, false); err != nil {
 			return fmt.Errorf("failed to generate standalone views for %s: %w", modelName, err)
 		}
-		
+
 		tableName := naming.DeriveTableName(modelName)
 		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"))
 	}
@@ -171,7 +187,7 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 		tableName := naming.DeriveTableName(modelName)
 		// We'll use the controller manager but only for route generation logic
 		// (Currently Andurel ties them together, so we'll generate standard resource routes)
-		if err := bm.controllerManager.GenerateControllerFromModel(modelName, false); err != nil {
+		if err := bm.controllerManager.GenerateControllerFromModel(modelName, false, nil); err != nil {
 			return fmt.Errorf("failed to generate routes for %s: %w", modelName, err)
 		}
 
@@ -202,7 +218,7 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 
 	// Fallback to calculated erase if manifest is missing or invalid
 	fmt.Println("Warning: Manifest not found or invalid, falling back to calculated erase...")
-	
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read blueprint file: %w", err)
@@ -224,7 +240,7 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 
 	for name := range controllersToErase {
 		tableName := naming.DeriveTableName(name)
-		
+
 		filesToRemove := []string{
 			filepath.Join(bm.config.Paths.Controllers, tableName+".go"),
 			filepath.Join(bm.config.Paths.Routes, tableName+".go"),

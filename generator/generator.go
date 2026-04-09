@@ -1,5 +1,9 @@
 package generator
 
+import (
+	"github.com/mbvlabs/andurel/generator/controllers"
+)
+
 type Generator struct {
 	coordinator Coordinator
 }
@@ -19,12 +23,12 @@ func (g *Generator) GenerateModel(resourceName string, tableNameOverride string,
 	return g.coordinator.ModelManager.GenerateModel(resourceName, tableNameOverride, skipFactory, validationRules)
 }
 
-func (g *Generator) GenerateController(resourceName, tableName string, withViews bool) error {
-	return g.coordinator.GenerateController(resourceName, tableName, withViews)
+func (g *Generator) GenerateController(resourceName, tableName string, withViews bool, methods []controllers.MethodConfig) error {
+	return g.coordinator.GenerateController(resourceName, tableName, withViews, methods)
 }
 
-func (g *Generator) GenerateControllerFromModel(resourceName string, withViews bool) error {
-	return g.coordinator.GenerateControllerFromModel(resourceName, withViews)
+func (g *Generator) GenerateControllerFromModel(resourceName string, withViews bool, methods []controllers.MethodConfig) error {
+	return g.coordinator.ControllerManager.GenerateControllerFromModel(resourceName, withViews, methods)
 }
 
 func (g *Generator) GenerateView(resourceName, tableName string) error {

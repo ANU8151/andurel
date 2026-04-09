@@ -33,6 +33,7 @@ func (fg *FileGenerator) GenerateController(
 	modulePath string,
 	databaseType string,
 	tableNameOverridden bool,
+	methods []MethodConfig,
 ) error {
 	// When table name is overridden, use it directly; otherwise derive from resource name
 	pluralName := tableName
@@ -54,6 +55,7 @@ func (fg *FileGenerator) GenerateController(
 		ModulePath:          modulePath,
 		ControllerType:      controllerType,
 		TableNameOverridden: tableNameOverridden,
+		Methods:             methods,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to build controller: %w", err)

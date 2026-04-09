@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 
+	"github.com/mbvlabs/andurel/generator/controllers"
 	"github.com/mbvlabs/andurel/generator/files"
 	"github.com/mbvlabs/andurel/generator/models"
 	"github.com/mbvlabs/andurel/generator/views"
@@ -85,8 +86,8 @@ func NewCoordinator() (Coordinator, error) {
 }
 
 // GenerateController coordinates controller and optional view generation
-func (c *Coordinator) GenerateController(resourceName, tableName string, withViews bool) error {
-	if err := c.ControllerManager.GenerateController(resourceName, tableName, withViews); err != nil {
+func (c *Coordinator) GenerateController(resourceName, tableName string, withViews bool, methods []controllers.MethodConfig) error {
+	if err := c.ControllerManager.GenerateController(resourceName, tableName, withViews, methods); err != nil {
 		return err
 	}
 
@@ -99,18 +100,13 @@ func (c *Coordinator) GenerateController(resourceName, tableName string, withVie
 	return nil
 }
 
-// GenerateControllerFromModel coordinates controller and optional view generation from existing model
-func (c *Coordinator) GenerateControllerFromModel(resourceName string, withViews bool) error {
-	if err := c.ControllerManager.GenerateControllerFromModel(resourceName, withViews); err != nil {
+func (c *Coordinator) GenerateViewWithController(resourceName, tableName string) error {
+	// 1. Generate the controller first (required for the view)
+	// Passing nil for methods as this is usually called for full resource generation
+	if err := c.ControllerManager.GenerateControllerFromModel(resourceName, true, nil); err != nil {
 		return err
 	}
 
-	if withViews {
-		tableName := ResolveTableName(c.config.Paths.Models, c.config.Paths.Queries, resourceName)
-		if err := c.ViewManager.GenerateViewWithController(resourceName, tableName); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	// 2. Generate the view
+	return c.ViewManager.GenerateViewWithController(resourceName, tableName)
 }

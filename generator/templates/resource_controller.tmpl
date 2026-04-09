@@ -365,3 +365,32 @@ func ({{.ReceiverName}} {{.PluralResourceName}}) Destroy(etx *echo.Context) erro
 
 	return etx.Redirect(http.StatusSeeOther, routes.{{.ResourceName}}Index.URL())
 }
+
+{{- range .Methods}}
+func ({{$.ReceiverName}} {{$.PluralResourceName}}) {{.Name | ToCamelCase}}(etx *echo.Context) error {
+	{{- if eq .Query "all"}}
+	{{$.PluralName | ToCamelCase}}List, err := models.All{{$.PluralResourceName}}(
+		etx.Request().Context(),
+		{{$.ReceiverName}}.db.Conn(),
+	)
+	if err != nil {
+		return render(etx, views.InternalError())
+	}
+	{{- else if eq .Query "paginate"}}
+	{{$.PluralName | ToCamelCase}}List, err := models.Paginate{{$.PluralResourceName}}(
+		etx.Request().Context(),
+		{{$.ReceiverName}}.db.Conn(),
+		1, 25,
+	)
+	if err != nil {
+		return render(etx, views.InternalError())
+	}
+	{{- end}}
+
+	{{- if .Render}}
+	return render(etx, views.{{.Render | ToCamelCase}}({{if or (eq .Query "all") (eq .Query "paginate")}}{{$.PluralName | ToCamelCase}}List{{end}}))
+	{{- else}}
+	return etx.NoContent(http.StatusOK)
+	{{- end}}
+}
+{{- end}}

@@ -30,10 +30,11 @@ func NewControllerManager(
 		config:           config,
 	}
 }
-
 func (c *ControllerManager) GenerateController(
-	resourceName, tableName string,
+	resourceName string,
+	tableName string,
 	withViews bool,
+	methods []controllers.MethodConfig,
 ) error {
 	modulePath := c.projectManager.GetModulePath()
 
@@ -68,7 +69,7 @@ func (c *ControllerManager) GenerateController(
 	tableNameOverridden := tableName != derivedTableName
 
 	fileGen := controllers.NewFileGenerator()
-	if err := fileGen.GenerateController(cat, resourceName, tableName, controllerType, modulePath, c.config.Database.Type, tableNameOverridden); err != nil {
+	if err := fileGen.GenerateController(cat, resourceName, tableName, controllerType, modulePath, c.config.Database.Type, tableNameOverridden, nil); err != nil {
 		return fmt.Errorf("failed to generate controller: %w", err)
 	}
 
@@ -81,7 +82,11 @@ func (c *ControllerManager) GenerateController(
 	return nil
 }
 
-func (c *ControllerManager) GenerateControllerFromModel(resourceName string, withViews bool) error {
+func (c *ControllerManager) GenerateControllerFromModel(
+	resourceName string,
+	withViews bool,
+	methods []controllers.MethodConfig,
+) error {
 	modulePath := c.projectManager.GetModulePath()
 
 	var modelFileName strings.Builder
@@ -143,7 +148,7 @@ func (c *ControllerManager) GenerateControllerFromModel(resourceName string, wit
 	}
 
 	fileGen := controllers.NewFileGenerator()
-	if err := fileGen.GenerateController(cat, resourceName, tableName, controllerType, modulePath, c.config.Database.Type, tableNameOverridden); err != nil {
+	if err := fileGen.GenerateController(cat, resourceName, tableName, controllerType, modulePath, c.config.Database.Type, tableNameOverridden, methods); err != nil {
 		return fmt.Errorf("failed to generate controller: %w", err)
 	}
 

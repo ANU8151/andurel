@@ -177,7 +177,7 @@ func generateController(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return gen.GenerateControllerFromModel(resourceName, withViews)
+	return gen.GenerateControllerFromModel(resourceName, withViews, nil)
 }
 
 func generateResource(cmd *cobra.Command, args []string) error {
@@ -202,7 +202,7 @@ func generateResource(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return gen.GenerateControllerFromModel(resourceName, true)
+	return gen.GenerateControllerFromModel(resourceName, true, nil)
 }
 
 func generateView(cmd *cobra.Command, args []string) error {
