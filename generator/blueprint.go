@@ -159,6 +159,9 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 			bm.addGeneratedFile(filepath.Join("router", "connect_"+tableName+"_routes.go"))
 
 			if withViews {
+				if err := bm.viewManager.GenerateViewWithController(controllerName, tableName); err != nil {
+					return fmt.Errorf("failed to generate views for %s: %w", controllerName, err)
+				}
 				bm.addGeneratedFile(filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"))
 			}
 		}
@@ -347,19 +350,33 @@ func (bm *BlueprintManager) buildCreateTableSQL(tableName string, fields map[str
 }
 
 func (bm *BlueprintManager) mapBlueprintTypeToSQL(fieldName, def string) sqlFieldInfo {
-	parts := strings.Fields(strings.ReplaceAll(def, ":", " "))
+	// Filter out validation rules (anything containing :)
+	// Laravel Blueprint uses validate:rule1,rule2 or rule1|rule2
+	// Our previous logic replaced : with space, which was too aggressive for string:200
+	
+	rawParts := strings.Fields(def)
+	var parts []string
+	for _, p := range rawParts {
+		if !strings.HasPrefix(p, "validate:") {
+			parts = append(parts, p)
+		}
+	}
+
 	if len(parts) == 0 {
 		return sqlFieldInfo{columnType: "TEXT"}
 	}
 
-	blueprintType := parts[0]
+	// Now we process the type part which might still have : for length like string:200
+	typeDef := parts[0]
+	typeParts := strings.Split(typeDef, ":")
+	blueprintType := typeParts[0]
+	
 	var info sqlFieldInfo
 
 	switch strings.ToLower(blueprintType) {
 	case "string":
-		if len(parts) > 1 {
-			info.columnType = fmt.Sprintf("VARCHAR(%s)", parts[1])
-			parts = parts[1:]
+		if len(typeParts) > 1 {
+			info.columnType = fmt.Sprintf("VARCHAR(%s)", typeParts[1])
 		} else {
 			info.columnType = "VARCHAR(255)"
 		}
@@ -379,12 +396,10 @@ func (bm *BlueprintManager) mapBlueprintTypeToSQL(fieldName, def string) sqlFiel
 		info.columnType = "UUID"
 	case "id":
 		info.columnType = "UUID"
-		// Relationship detection
-		if len(parts) > 1 {
-			// author_id: id:user -> references users
-			info.fkTable = naming.DeriveTableName(parts[1])
+		// Relationship detection from type definition (id:user)
+		if len(typeParts) > 1 {
+			info.fkTable = naming.DeriveTableName(typeParts[1])
 		} else if strings.HasSuffix(strings.ToLower(fieldName), "_id") {
-			// user_id: id -> references users
 			modelName := fieldName[:len(fieldName)-3]
 			info.fkTable = naming.DeriveTableName(modelName)
 		}
@@ -394,9 +409,10 @@ func (bm *BlueprintManager) mapBlueprintTypeToSQL(fieldName, def string) sqlFiel
 		info.columnType = "TEXT"
 	}
 
-	// Handle constraints
-	for _, part := range parts {
-		switch strings.ToLower(part) {
+	// Handle other constraints in the remaining parts
+	for i := 1; i < len(parts); i++ {
+		p := strings.ToLower(parts[i])
+		switch p {
 		case "required", "notnull":
 			info.columnType += " NOT NULL"
 		case "unique":

@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v5"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -10,9 +12,6 @@ import (
 	"testapp/router/cookies"
 	"testapp/router/routes"
 	"testapp/views"
-
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v5"
 )
 
 type Items struct {
