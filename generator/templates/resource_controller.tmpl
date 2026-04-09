@@ -414,10 +414,18 @@ func ({{$.ReceiverName}} {{$.PluralResourceName}}) {{.Name | ToCamelCase}}(etx *
 	}
 	{{- end}}
 
+	{{- if .IsFragment}}
+	{{- if eq $.Hypermedia "datastar"}}
+	return datastar.RenderFragment(etx, views.{{.Render | ToCamelCase}}({{if or (eq .Query "all") (eq .Query "paginate")}}{{$.PluralName | ToCamelCase}}List{{end}}))
+	{{- else}}
+	return render(etx, views.{{.Render | ToCamelCase}}({{if or (eq .Query "all") (eq .Query "paginate")}}{{$.PluralName | ToCamelCase}}List{{end}}))
+	{{- end}}
+	{{- else}}
 	{{- if .Render}}
 	return render(etx, views.{{.Render | ToCamelCase}}({{if or (eq .Query "all") (eq .Query "paginate")}}{{$.PluralName | ToCamelCase}}List{{end}}))
 	{{- else}}
 	return etx.NoContent(http.StatusOK)
+	{{- end}}
 	{{- end}}
 }
 {{- end}}

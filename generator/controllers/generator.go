@@ -20,9 +20,10 @@ const (
 )
 
 type MethodConfig struct {
-	Name   string
-	Query  string
-	Render string
+	Name       string
+	Query      string
+	Render     string
+	IsFragment bool
 }
 
 type GeneratedField struct {

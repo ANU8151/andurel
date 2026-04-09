@@ -26,8 +26,9 @@ type BlueprintControllerConfig struct {
 }
 
 type BlueprintMethod struct {
-	Query  string `yaml:"query"`
-	Render string `yaml:"render"`
+	Query    string `yaml:"query"`
+	Render   string `yaml:"render"`
+	Fragment bool   `yaml:"fragment"`
 }
 
 type BlueprintManifest struct {
@@ -140,9 +141,10 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 		methods := make([]controllers.MethodConfig, 0)
 		for methodName, methodConf := range config.Methods {
 			methods = append(methods, controllers.MethodConfig{
-				Name:   methodName,
-				Query:  methodConf.Query,
-				Render: methodConf.Render,
+				Name:       methodName,
+				Query:      methodConf.Query,
+				Render:     methodConf.Render,
+				IsFragment: methodConf.Fragment,
 			})
 		}
 
@@ -155,6 +157,25 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 			bm.addGeneratedFile(filepath.Join(bm.config.Paths.Controllers, tableName+".go"))
 			bm.addGeneratedFile(filepath.Join(bm.config.Paths.Routes, tableName+".go"))
 			bm.addGeneratedFile(filepath.Join("router", "connect_"+tableName+"_routes.go"))
+
+			// Handle custom methods (fragments)
+			for _, method := range methods {
+				if method.IsFragment && method.Render != "" {
+					fragmentPath := filepath.Join(bm.config.Paths.Views, naming.ToSnakeCase(method.Render)+".templ")
+					if _, err := os.Stat(fragmentPath); os.IsNotExist(err) {
+						// Generate a base fragment template
+						content := fmt.Sprintf("package views\n\ntempl %s() {\n\t<div id=\"%s\">\n\t\t<!-- Fragment content -->\n\t\t<p>Fragment: %s</p>\n\t</div>\n}\n",
+							naming.ToCamelCase(method.Render),
+							naming.ToSnakeCase(method.Render),
+							method.Name,
+						)
+						if err := os.WriteFile(fragmentPath, []byte(content), 0644); err == nil {
+							bm.addGeneratedFile(fragmentPath)
+							fmt.Printf("✓ Created fragment view: %s\n", fragmentPath)
+						}
+					}
+				}
+			}
 
 			if withViews {
 				if err := bm.viewManager.GenerateViewWithController(controllerName, tableName); err != nil {

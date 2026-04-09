@@ -46,6 +46,9 @@ controllers:
     popular:
       query: all
       render: PostPopular
+    stats:
+      fragment: true
+      render: PostStats
 `
 			if _, err := os.Stat("draft.yaml"); err == nil {
 				return fmt.Errorf("draft.yaml already exists")
