@@ -15,8 +15,8 @@ func New() (Generator, error) {
 	}, nil
 }
 
-func (g *Generator) GenerateModel(resourceName string, tableNameOverride string, skipFactory bool) error {
-	return g.coordinator.ModelManager.GenerateModel(resourceName, tableNameOverride, skipFactory)
+func (g *Generator) GenerateModel(resourceName string, tableNameOverride string, skipFactory bool, validationRules map[string]string) error {
+	return g.coordinator.ModelManager.GenerateModel(resourceName, tableNameOverride, skipFactory, validationRules)
 }
 
 func (g *Generator) GenerateController(resourceName, tableName string, withViews bool) error {

@@ -122,6 +122,7 @@ func TestConstructorConversions__ProperlyHandlesNullableColumns(t *testing.T) {
 				sqlPath,
 				tt.modulePath,
 				"",
+				nil,
 			)
 			if err != nil {
 				t.Fatalf("Failed to generate model: %v", err)
@@ -279,6 +280,7 @@ func TestConstructorConversions__FieldsExcludedCorrectly(t *testing.T) {
 				sqlPath,
 				tt.modulePath,
 				"",
+				nil,
 			)
 			if err != nil {
 				t.Fatalf("Failed to generate model: %v", err)

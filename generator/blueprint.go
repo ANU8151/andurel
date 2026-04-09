@@ -105,14 +105,21 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 	}
 
 	// 2. Generate Models
-	for modelName := range bp.Models {
-		tableName := naming.DeriveTableName(modelName)
-		snakeName := naming.ToSnakeCase(modelName)
-		
-		if err := bm.modelManager.GenerateModel(modelName, "", false); err != nil {
+	for modelName, fields := range bp.Models {
+		validationRules := make(map[string]string)
+		for fieldName, fieldDef := range fields {
+			rules := bm.extractValidationRules(fieldDef)
+			if rules != "" {
+				validationRules[naming.ToSnakeCase(fieldName)] = rules
+			}
+		}
+
+		if err := bm.modelManager.GenerateModel(modelName, "", false, validationRules); err != nil {
 			return fmt.Errorf("failed to generate model %s: %w", modelName, err)
 		}
 
+		tableName := naming.DeriveTableName(modelName)
+		snakeName := naming.ToSnakeCase(modelName)
 		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Models, snakeName+".go"))
 		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Models, "factories", snakeName+".go"))
 		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Queries, tableName+".sql"))
@@ -279,6 +286,16 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 type sqlFieldInfo struct {
 	columnType string
 	fkTable    string
+}
+
+func (bm *BlueprintManager) extractValidationRules(def string) string {
+	parts := strings.Fields(def)
+	for _, part := range parts {
+		if strings.HasPrefix(part, "validate:") {
+			return strings.TrimPrefix(part, "validate:")
+		}
+	}
+	return ""
 }
 
 func (bm *BlueprintManager) buildCreateTableSQL(tableName string, fields map[string]string) (string, error) {

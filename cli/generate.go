@@ -110,7 +110,7 @@ func generateModel(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return gen.GenerateModel(resourceName, tableNameOverride, skipFactory)
+	return gen.GenerateModel(resourceName, tableNameOverride, skipFactory, nil)
 }
 
 func newControllerCommand() *cobra.Command {
@@ -198,7 +198,7 @@ func generateResource(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate resource always generates factory by default
-	if err := gen.GenerateModel(resourceName, tableNameOverride, false); err != nil {
+	if err := gen.GenerateModel(resourceName, tableNameOverride, false, nil); err != nil {
 		return err
 	}
 

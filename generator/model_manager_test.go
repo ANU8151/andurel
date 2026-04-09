@@ -486,7 +486,7 @@ func TestGenerateModel_SingularTableNameOverride(t *testing.T) {
 		t.Fatalf("Failed to create migration file: %v", err)
 	}
 
-	err := manager.GenerateModel("UserFeedback", "user_feedback", false)
+	err := manager.GenerateModel("UserFeedback", "user_feedback", false, nil)
 
 	if err != nil && strings.Contains(err.Error(), "must be plural") {
 		t.Errorf("GenerateModel() with --table-name override should not fail with plural validation: %v", err)
@@ -543,7 +543,7 @@ DROP TABLE authors;`
 	// Generate model with factory (skipFactory = false)
 	// This will fail at sqlc step in unit tests, but we're just checking
 	// that the function can be called with the skipFactory parameter
-	err := manager.GenerateModel("Author", "", false)
+	err := manager.GenerateModel("Author", "", false, nil)
 
 	// We expect an error about sqlc since it's not available in unit tests
 	// The important part is that the function accepts the skipFactory parameter
@@ -585,7 +585,7 @@ DROP TABLE publishers;`
 
 	// Generate model without factory (skipFactory = true)
 	// This will also fail at sqlc step, but we're checking the parameter is accepted
-	err := manager.GenerateModel("Publisher", "", true)
+	err := manager.GenerateModel("Publisher", "", true, nil)
 
 	// We expect an error about sqlc since it's not available in unit tests
 	if err == nil {

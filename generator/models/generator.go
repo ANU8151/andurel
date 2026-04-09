@@ -19,7 +19,6 @@ import (
 	"github.com/mbvlabs/andurel/pkg/errors"
 	"github.com/mbvlabs/andurel/pkg/naming"
 )
-
 type GeneratedField struct {
 	Name                    string
 	Type                    string
@@ -31,6 +30,7 @@ type GeneratedField struct {
 	ConversionToDBForUpdate string
 	ZeroCheck               string
 	IsForeignKey            bool
+	ValidationTag           string
 }
 
 type GeneratedModel struct {
@@ -55,12 +55,13 @@ type GeneratedModel struct {
 }
 
 type Config struct {
-	TableName    string
-	ResourceName string
-	PackageName  string
-	DatabaseType string
-	ModulePath   string
-	CustomTypes  []types.TypeOverride
+	TableName       string
+	ResourceName    string
+	PackageName     string
+	DatabaseType    string
+	ModulePath      string
+	CustomTypes     []types.TypeOverride
+	ValidationRules map[string]string // fieldName -> validation rules (e.g. "required,email")
 }
 
 type SQLData struct {
@@ -140,6 +141,13 @@ func (g *Generator) Build(cat *catalog.Catalog, config Config) (*GeneratedModel,
 		field, err := g.buildField(col)
 		if err != nil {
 			return nil, errors.NewGeneratorError("build field", col.Name, err)
+		}
+
+		// Apply validation rules if provided
+		if config.ValidationRules != nil {
+			if tag, ok := config.ValidationRules[col.Name]; ok {
+				field.ValidationTag = tag
+			}
 		}
 
 		if field.Package != "" {
@@ -362,6 +370,7 @@ func (g *Generator) GenerateModel(
 	modelPath, sqlPath string,
 	modulePath string,
 	tableNameOverride string,
+	validationRules map[string]string,
 ) error {
 	table, err := cat.GetTable("", pluralName)
 	if err != nil {
@@ -380,11 +389,12 @@ To use a different table name, run:
 	}
 
 	model, err := g.Build(cat, Config{
-		TableName:    pluralName,
-		ResourceName: resourceName,
-		PackageName:  "models",
-		DatabaseType: g.typeMapper.GetDatabaseType(),
-		ModulePath:   modulePath,
+		TableName:       pluralName,
+		ResourceName:    resourceName,
+		PackageName:     "models",
+		DatabaseType:    g.typeMapper.GetDatabaseType(),
+		ModulePath:      modulePath,
+		ValidationRules: validationRules,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to build model: %w", err)
@@ -914,13 +924,14 @@ func (g *Generator) GenerateModelFromMigrations(
 	migrationDirs []string,
 	modelPath, sqlPath string,
 	modulePath string,
+	validationRules map[string]string,
 ) error {
 	cat, err := g.buildCatalogFromTableMigrations(tableName, migrationDirs)
 	if err != nil {
 		return fmt.Errorf("failed to build catalog from migrations: %w", err)
 	}
 
-	return g.GenerateModel(cat, resourceName, tableName, modelPath, sqlPath, modulePath, "")
+	return g.GenerateModel(cat, resourceName, tableName, modelPath, sqlPath, modulePath, "", validationRules)
 }
 
 func (g *Generator) RefreshQueries(

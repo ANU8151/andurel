@@ -43,7 +43,7 @@ func Find{{.Name}}(
 type Create{{.Name}}Data struct {
 {{- range .Fields}}
 {{- if and (ne .Name "ID") (ne .Name "CreatedAt") (ne .Name "UpdatedAt")}}
-	{{.Name}} {{.Type}}
+	{{.Name}} {{.Type}} {{if .ValidationTag}}`validate:"{{.ValidationTag}}"`{{end}}
 {{- end}}
 {{- end}}
 {{- if not .IsAutoIncrementID}}
@@ -96,7 +96,7 @@ type Update{{.Name}}Data struct {
 	ID {{if .IDType}}{{.IDType}}{{else}}uuid.UUID{{end}}
 {{- range .Fields}}
 {{- if and (ne .Name "ID") (ne .Name "CreatedAt")}}
-	{{.Name}} {{.Type}}
+	{{.Name}} {{.Type}} {{if .ValidationTag}}`validate:"{{.ValidationTag}}"`{{end}}
 {{- end}}
 {{- end}}
 }

@@ -108,6 +108,7 @@ func (m *ModelManager) GenerateModel(
 	resourceName string,
 	tableNameOverride string,
 	skipFactory bool,
+	validationRules map[string]string,
 ) error {
 	tableName := tableNameOverride
 	if tableName == "" {
@@ -137,7 +138,7 @@ func (m *ModelManager) GenerateModel(
 		return err
 	}
 
-	if err := m.modelGenerator.GenerateModel(cat, ctx.ResourceName, ctx.TableName, ctx.ModelPath, ctx.SQLPath, ctx.ModulePath, tableNameOverride); err != nil {
+	if err := m.modelGenerator.GenerateModel(cat, ctx.ResourceName, ctx.TableName, ctx.ModelPath, ctx.SQLPath, ctx.ModulePath, tableNameOverride, validationRules); err != nil {
 		return fmt.Errorf("failed to generate model: %w", err)
 	}
 
