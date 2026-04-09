@@ -113,7 +113,7 @@ controllers:
 	}
 
 	// Verify manifest exists
-	if _, err := os.Stat(".andurel_blueprint_manifest.json"); os.IsNotExist(err) {
+	if _, err := os.Stat(".blueprint.json"); os.IsNotExist(err) {
 		t.Error("Manifest file was not created")
 	}
 
@@ -134,7 +134,7 @@ controllers:
 	}
 
 	// Verify manifest is removed
-	if _, err := os.Stat(".andurel_blueprint_manifest.json"); err == nil {
+	if _, err := os.Stat(".blueprint.json"); err == nil {
 		t.Error("Manifest file should have been removed after erase")
 	}
 }

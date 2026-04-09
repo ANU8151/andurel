@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const manifestFileName = ".andurel_blueprint_manifest.json"
+const manifestFileName = ".blueprint.json"
 
 type Blueprint struct {
 	Models      map[string]map[string]string         `yaml:"models"`
