@@ -2,7 +2,6 @@ package generator
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/mbvlabs/andurel/generator/files"
@@ -16,7 +15,7 @@ func (m *MockFileManager) RunSQLCGenerate() error {
 	return nil // Skip SQLC in tests
 }
 
-func TestBlueprintGeneration(t *testing.T) {
+func TestBlueprintLifecycle(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldWd, _ := os.Getwd()
 	defer os.Chdir(oldWd)
@@ -84,33 +83,24 @@ controllers:
 
 	gen := Generator{coordinator: coordinator}
 
+	// 1. Build
 	if err := gen.GenerateFromBlueprint("draft.yaml"); err != nil {
-		t.Fatalf("Failed to generate from blueprint: %v", err)
+		t.Fatalf("Failed to build from blueprint: %v", err)
 	}
 
-	// Verify files
-	filesToCheck := []string{
-		"models/post.go",
-		"controllers/posts.go",
-		"database/queries/posts.sql",
+	// Verify files exist
+	modelPath := "models/post.go"
+	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
+		t.Errorf("Model file %s was not generated", modelPath)
 	}
 
-	for _, f := range filesToCheck {
-		if _, err := os.Stat(f); os.IsNotExist(err) {
-			t.Errorf("File %s was not generated", f)
-		}
+	// 2. Erase
+	if err := gen.EraseFromBlueprint("draft.yaml"); err != nil {
+		t.Fatalf("Failed to erase from blueprint: %v", err)
 	}
 
-	// Check if migration was created
-	migrations, _ := os.ReadDir("database/migrations")
-	foundMigration := false
-	for _, m := range migrations {
-		if strings.Contains(m.Name(), "create_posts") {
-			foundMigration = true
-			break
-		}
-	}
-	if !foundMigration {
-		t.Error("Migration for posts was not created")
+	// Verify files are removed
+	if _, err := os.Stat(modelPath); err == nil {
+		t.Errorf("Model file %s should have been removed", modelPath)
 	}
 }

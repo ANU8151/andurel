@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mbvlabs/andurel/pkg/naming"
@@ -94,6 +95,71 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 	return nil
 }
 
+func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read blueprint file: %w", err)
+	}
+
+	var bp Blueprint
+	if err := yaml.Unmarshal(data, &bp); err != nil {
+		return fmt.Errorf("failed to parse blueprint YAML: %w", err)
+	}
+
+	// 1. Erase Controllers and Views
+	for controllerName := range bp.Controllers {
+		tableName := naming.DeriveTableName(controllerName)
+		
+		filesToRemove := []string{
+			filepath.Join(bm.config.Paths.Controllers, tableName+".go"),
+			filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"),
+			filepath.Join(bm.config.Paths.Routes, tableName+".go"),
+			filepath.Join("router", "connect_"+tableName+"_routes.go"),
+		}
+
+		for _, f := range filesToRemove {
+			if err := os.Remove(f); err == nil {
+				fmt.Printf("✓ Removed: %s\n", f)
+			}
+		}
+	}
+
+	// 2. Erase Models and Queries
+	for modelName := range bp.Models {
+		tableName := naming.DeriveTableName(modelName)
+		snakeName := naming.ToSnakeCase(modelName)
+
+		filesToRemove := []string{
+			filepath.Join(bm.config.Paths.Models, snakeName+".go"),
+			filepath.Join(bm.config.Paths.Models, "factories", snakeName+".go"),
+			filepath.Join(bm.config.Paths.Queries, tableName+".sql"),
+		}
+
+		for _, f := range filesToRemove {
+			if err := os.Remove(f); err == nil {
+				fmt.Printf("✓ Removed: %s\n", f)
+			}
+		}
+
+		// Erase Migrations for this table
+		if len(bm.config.Database.MigrationDirs) > 0 {
+			migrationDir := bm.config.Database.MigrationDirs[0]
+			entries, _ := os.ReadDir(migrationDir)
+			for _, entry := range entries {
+				if strings.Contains(entry.Name(), "create_"+tableName) {
+					path := filepath.Join(migrationDir, entry.Name())
+					if err := os.Remove(path); err == nil {
+						fmt.Printf("✓ Removed migration: %s\n", path)
+					}
+				}
+			}
+		}
+	}
+
+	fmt.Println("\n✓ Erase complete. Some shared files (like router/routes.go additions) might need manual cleanup if they were modified.")
+	return nil
+}
+
 func (bm *BlueprintManager) buildCreateTableSQL(tableName string, fields map[string]string) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", tableName))
@@ -123,9 +189,8 @@ func (bm *BlueprintManager) mapBlueprintTypeToSQL(def string) string {
 	switch strings.ToLower(blueprintType) {
 	case "string":
 		if len(parts) > 1 {
-			// Check if the second part is a number (length)
 			sqlType = fmt.Sprintf("VARCHAR(%s)", parts[1])
-			parts = parts[1:] // Consume length
+			parts = parts[1:]
 		} else {
 			sqlType = "VARCHAR(255)"
 		}
@@ -151,11 +216,9 @@ func (bm *BlueprintManager) mapBlueprintTypeToSQL(def string) string {
 		sqlType = "TEXT"
 	}
 
-	// Handle constraints
 	for _, part := range parts {
 		switch strings.ToLower(part) {
 		case "nullable":
-			// Default is nullable in most DBs, but we can be explicit if needed
 		case "required", "notnull":
 			sqlType += " NOT NULL"
 		case "unique":

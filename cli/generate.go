@@ -25,32 +25,12 @@ func chdirToProjectRoot() error {
 }
 
 func newGenerateCommand() *cobra.Command {
-	var blueprintFile string
-
 	generateCmd := &cobra.Command{
 		Use:     "generate",
 		Aliases: []string{"g", "gen"},
 		Short:   "Generate code and scaffolds",
 		Long:    `Generate models, controllers, views, resources, and more.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if blueprintFile == "" {
-				return cmd.Help()
-			}
-
-			if err := chdirToProjectRoot(); err != nil {
-				return err
-			}
-
-			gen, err := generator.New()
-			if err != nil {
-				return err
-			}
-
-			return gen.GenerateFromBlueprint(blueprintFile)
-		},
 	}
-
-	generateCmd.PersistentFlags().StringVarP(&blueprintFile, "file", "f", "", "Generate from a YAML blueprint file (e.g., draft.yaml)")
 
 	generateCmd.AddCommand(newModelCommand())
 	generateCmd.AddCommand(newControllerCommand())

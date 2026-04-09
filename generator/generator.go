@@ -55,6 +55,10 @@ func (g *Generator) GenerateFromBlueprint(filePath string) error {
 	return g.coordinator.BlueprintManager.GenerateFromBlueprint(filePath)
 }
 
+func (g *Generator) EraseFromBlueprint(filePath string) error {
+	return g.coordinator.BlueprintManager.EraseFromBlueprint(filePath)
+}
+
 func (g *Generator) GetModulePath() string {
 	return g.coordinator.projectManager.GetModulePath()
 }
