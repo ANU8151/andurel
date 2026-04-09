@@ -112,6 +112,11 @@ controllers:
 		t.Fatalf("Failed to build from blueprint: %v", err)
 	}
 
+	// Verify manifest exists
+	if _, err := os.Stat(".andurel_blueprint_manifest.json"); os.IsNotExist(err) {
+		t.Error("Manifest file was not created")
+	}
+
 	// Verify files exist
 	modelPath := "models/post.go"
 	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
@@ -126,5 +131,10 @@ controllers:
 	// Verify files are removed
 	if _, err := os.Stat(modelPath); err == nil {
 		t.Errorf("Model file %s should have been removed", modelPath)
+	}
+
+	// Verify manifest is removed
+	if _, err := os.Stat(".andurel_blueprint_manifest.json"); err == nil {
+		t.Error("Manifest file should have been removed after erase")
 	}
 }

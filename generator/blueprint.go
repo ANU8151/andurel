@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,8 @@ import (
 	"github.com/mbvlabs/andurel/pkg/naming"
 	"gopkg.in/yaml.v3"
 )
+
+const manifestFileName = ".andurel_blueprint_manifest.json"
 
 type Blueprint struct {
 	Models      map[string]map[string]string         `yaml:"models"`
@@ -20,12 +23,17 @@ type BlueprintControllerConfig struct {
 	Views    *bool `yaml:"views"` // Use pointer to distinguish between missing and false
 }
 
+type BlueprintManifest struct {
+	GeneratedFiles []string `json:"generated_files"`
+}
+
 type BlueprintManager struct {
 	modelManager      *ModelManager
 	controllerManager *ControllerManager
 	viewManager       *ViewManager
 	migrationManager  *MigrationManager
 	config            *UnifiedConfig
+	generatedFiles    []string
 }
 
 func NewBlueprintManager(
@@ -41,7 +49,29 @@ func NewBlueprintManager(
 		viewManager:       viewManager,
 		migrationManager:  migrationManager,
 		config:            config,
+		generatedFiles:    make([]string, 0),
 	}
+}
+
+func (bm *BlueprintManager) addGeneratedFile(path string) {
+	bm.generatedFiles = append(bm.generatedFiles, path)
+}
+
+func (bm *BlueprintManager) saveManifest() error {
+	manifest := BlueprintManifest{
+		GeneratedFiles: bm.generatedFiles,
+	}
+
+	data, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal manifest: %w", err)
+	}
+
+	if err := os.WriteFile(manifestFileName, data, 0644); err != nil {
+		return fmt.Errorf("failed to save manifest: %w", err)
+	}
+
+	return nil
 }
 
 func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
@@ -68,14 +98,22 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create migration for %s: %w", modelName, err)
 		}
+		bm.addGeneratedFile(path)
 		fmt.Printf("✓ Created migration: %s\n", path)
 	}
 
 	// 2. Generate Models
 	for modelName := range bp.Models {
+		tableName := naming.DeriveTableName(modelName)
+		snakeName := naming.ToSnakeCase(modelName)
+		
 		if err := bm.modelManager.GenerateModel(modelName, "", false); err != nil {
 			return fmt.Errorf("failed to generate model %s: %w", modelName, err)
 		}
+
+		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Models, snakeName+".go"))
+		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Models, "factories", snakeName+".go"))
+		bm.addGeneratedFile(filepath.Join(bm.config.Paths.Queries, tableName+".sql"))
 	}
 
 	// 3. Generate Controllers
@@ -89,13 +127,41 @@ func (bm *BlueprintManager) GenerateFromBlueprint(filePath string) error {
 			if err := bm.controllerManager.GenerateControllerFromModel(controllerName, withViews); err != nil {
 				return fmt.Errorf("failed to generate resource controller %s: %w", controllerName, err)
 			}
+
+			tableName := naming.DeriveTableName(controllerName)
+			bm.addGeneratedFile(filepath.Join(bm.config.Paths.Controllers, tableName+".go"))
+			bm.addGeneratedFile(filepath.Join(bm.config.Paths.Routes, tableName+".go"))
+			bm.addGeneratedFile(filepath.Join("router", "connect_"+tableName+"_routes.go"))
+			
+			if withViews {
+				bm.addGeneratedFile(filepath.Join(bm.config.Paths.Views, tableName+"_resource.templ"))
+			}
 		}
 	}
 
-	return nil
+	return bm.saveManifest()
 }
 
 func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
+	// Try to load from manifest first
+	manifestData, err := os.ReadFile(manifestFileName)
+	if err == nil {
+		var manifest BlueprintManifest
+		if err := json.Unmarshal(manifestData, &manifest); err == nil {
+			for _, path := range manifest.GeneratedFiles {
+				if err := os.Remove(path); err == nil {
+					fmt.Printf("✓ Removed: %s\n", path)
+				}
+			}
+			_ = os.Remove(manifestFileName)
+			fmt.Println("\n✓ Erase complete (using manifest).")
+			return nil
+		}
+	}
+
+	// Fallback to calculated erase if manifest is missing or invalid
+	fmt.Println("Warning: Manifest not found or invalid, falling back to calculated erase...")
+	
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read blueprint file: %w", err)
