@@ -226,71 +226,100 @@ func (bm *BlueprintManager) EraseFromBlueprint(filePath string) error {
 	return nil
 }
 
+type sqlFieldInfo struct {
+	columnType string
+	fkTable    string
+}
+
 func (bm *BlueprintManager) buildCreateTableSQL(tableName string, fields map[string]string) (string, error) {
 	var sb strings.Builder
+	var foreignKeys []string
+
 	sb.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", tableName))
 	sb.WriteString("    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n")
 
 	for fieldName, fieldDef := range fields {
-		sqlType := bm.mapBlueprintTypeToSQL(fieldDef)
-		sb.WriteString(fmt.Sprintf("    %s %s,\n", naming.ToSnakeCase(fieldName), sqlType))
+		fieldInfo := bm.mapBlueprintTypeToSQL(fieldName, fieldDef)
+		columnName := naming.ToSnakeCase(fieldName)
+		sb.WriteString(fmt.Sprintf("    %s %s,\n", columnName, fieldInfo.columnType))
+
+		if fieldInfo.fkTable != "" {
+			fk := fmt.Sprintf("    CONSTRAINT fk_%s_%s FOREIGN KEY (%s) REFERENCES %s(id) ON DELETE CASCADE",
+				tableName, columnName, columnName, fieldInfo.fkTable)
+			foreignKeys = append(foreignKeys, fk)
+		}
 	}
 
 	sb.WriteString("    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n")
-	sb.WriteString("    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n")
-	sb.WriteString(");")
+	sb.WriteString("    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
+
+	if len(foreignKeys) > 0 {
+		sb.WriteString(",\n")
+		sb.WriteString(strings.Join(foreignKeys, ",\n"))
+	}
+
+	sb.WriteString("\n);")
 
 	return sb.String(), nil
 }
 
-func (bm *BlueprintManager) mapBlueprintTypeToSQL(def string) string {
+func (bm *BlueprintManager) mapBlueprintTypeToSQL(fieldName, def string) sqlFieldInfo {
 	parts := strings.Fields(strings.ReplaceAll(def, ":", " "))
 	if len(parts) == 0 {
-		return "TEXT"
+		return sqlFieldInfo{columnType: "TEXT"}
 	}
 
 	blueprintType := parts[0]
-	var sqlType string
+	var info sqlFieldInfo
 
 	switch strings.ToLower(blueprintType) {
 	case "string":
 		if len(parts) > 1 {
-			sqlType = fmt.Sprintf("VARCHAR(%s)", parts[1])
+			info.columnType = fmt.Sprintf("VARCHAR(%s)", parts[1])
 			parts = parts[1:]
 		} else {
-			sqlType = "VARCHAR(255)"
+			info.columnType = "VARCHAR(255)"
 		}
 	case "text":
-		sqlType = "TEXT"
+		info.columnType = "TEXT"
 	case "integer", "int":
-		sqlType = "INTEGER"
+		info.columnType = "INTEGER"
 	case "bigint":
-		sqlType = "BIGINT"
+		info.columnType = "BIGINT"
 	case "boolean", "bool":
-		sqlType = "BOOLEAN"
+		info.columnType = "BOOLEAN"
 	case "timestamp":
-		sqlType = "TIMESTAMP WITH TIME ZONE"
+		info.columnType = "TIMESTAMP WITH TIME ZONE"
 	case "date":
-		sqlType = "DATE"
+		info.columnType = "DATE"
 	case "uuid":
-		sqlType = "UUID"
+		info.columnType = "UUID"
 	case "id":
-		sqlType = "UUID"
+		info.columnType = "UUID"
+		// Relationship detection
+		if len(parts) > 1 {
+			// author_id: id:user -> references users
+			info.fkTable = naming.DeriveTableName(parts[1])
+		} else if strings.HasSuffix(strings.ToLower(fieldName), "_id") {
+			// user_id: id -> references users
+			modelName := fieldName[:len(fieldName)-3]
+			info.fkTable = naming.DeriveTableName(modelName)
+		}
 	case "decimal":
-		sqlType = "DECIMAL"
+		info.columnType = "DECIMAL"
 	default:
-		sqlType = "TEXT"
+		info.columnType = "TEXT"
 	}
 
+	// Handle constraints
 	for _, part := range parts {
 		switch strings.ToLower(part) {
-		case "nullable":
 		case "required", "notnull":
-			sqlType += " NOT NULL"
+			info.columnType += " NOT NULL"
 		case "unique":
-			sqlType += " UNIQUE"
+			info.columnType += " UNIQUE"
 		}
 	}
 
-	return sqlType
+	return info
 }
