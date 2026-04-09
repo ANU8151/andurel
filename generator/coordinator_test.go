@@ -169,12 +169,12 @@ func TestCoordinator_GenerateControllerValidation(t *testing.T) {
 	}
 
 	// Test that validation errors are properly returned
-	err = coord.GenerateController("", "", false)
+	err = coord.GenerateController("", "", false, nil)
 	if err == nil {
 		t.Error("Expected validation error for empty resource name")
 	}
 
-	err = coord.GenerateController("invalid-name", "table", false)
+	err = coord.GenerateController("invalid-name", "table", false, nil)
 	if err == nil {
 		t.Error("Expected validation error for invalid resource name")
 	}
@@ -232,12 +232,12 @@ func TestCoordinator_GenerateControllerFromModelValidation(t *testing.T) {
 	}
 
 	// Test that validation errors are properly returned
-	err = coord.GenerateControllerFromModel("", false)
+	err = coord.GenerateControllerFromModel("", false, nil)
 	if err == nil {
 		t.Error("Expected validation error for empty resource name")
 	}
 
-	err = coord.GenerateControllerFromModel("invalid-name", false)
+	err = coord.GenerateControllerFromModel("invalid-name", false, nil)
 	if err == nil {
 		t.Error("Expected validation error for invalid resource name")
 	}

@@ -36,19 +36,16 @@ func newBlueprintInitCommand() *cobra.Command {
 
 			const content = `models:
   Post:
-    title: string:200 unique
-    content: text
+    title: string:200 unique validate:required,max=100
+    content: text validate:required
     published_at: timestamp nullable
 
 controllers:
   Post:
     resource: true
-
-views:
-  Post: true
-
-routes:
-  Post: resource
+    popular:
+      query: all
+      render: PostPopular
 `
 			if _, err := os.Stat("draft.yaml"); err == nil {
 				return fmt.Errorf("draft.yaml already exists")
