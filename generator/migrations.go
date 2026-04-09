@@ -2,8 +2,11 @@ package generator
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/mbvlabs/andurel/generator/internal/catalog"
 	"github.com/mbvlabs/andurel/generator/internal/ddl"
@@ -52,6 +55,31 @@ func (mm *MigrationManager) BuildCatalogFromMigrations(
 	}
 
 	return cat, nil
+}
+
+func (mm *MigrationManager) CreateMigration(name string, sqlContent string, config *UnifiedConfig) (string, error) {
+	timestamp := time.Now().Format("20060102150405")
+	fileName := fmt.Sprintf("%s_%s.sql", timestamp, name)
+
+	// Assume the first migration dir is the primary one
+	if len(config.Database.MigrationDirs) == 0 {
+		return "", fmt.Errorf("no migration directories configured")
+	}
+
+	migrationDir := config.Database.MigrationDirs[0]
+	filePath := filepath.Join(migrationDir, fileName)
+
+	content := fmt.Sprintf("-- +goose Up\n%s\n\n-- +goose Down\n", sqlContent)
+
+	if err := os.MkdirAll(migrationDir, 0755); err != nil {
+		return "", err
+	}
+
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		return "", err
+	}
+
+	return filePath, nil
 }
 
 func isRelevantForTable(stmt, targetTable string) bool {

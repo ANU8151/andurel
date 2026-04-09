@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/mbvlabs/andurel/pkg/cache"
@@ -129,10 +130,15 @@ func FormatGoFile(path string) error {
 	// First run goimports to fix imports
 	cmd := exec.Command("goimports", "-w", path)
 	if err := cmd.Run(); err != nil {
-		return &FileOperationError{
-			Operation: "goimports",
-			Path:      path,
-			Err:       err,
+		// If goimports is not found, just log a warning and continue with go fmt
+		if strings.Contains(err.Error(), "executable file not found") {
+			fmt.Printf("Warning: goimports not found in PATH, skipping import formatting for %s\n", path)
+		} else {
+			return &FileOperationError{
+				Operation: "goimports",
+				Path:      path,
+				Err:       err,
+			}
 		}
 	}
 

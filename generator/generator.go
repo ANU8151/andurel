@@ -51,6 +51,10 @@ func (g *Generator) GenerateFragment(config FragmentConfig) error {
 	return g.coordinator.FragmentManager.GenerateFragment(config)
 }
 
+func (g *Generator) GenerateFromBlueprint(filePath string) error {
+	return g.coordinator.BlueprintManager.GenerateFromBlueprint(filePath)
+}
+
 func (g *Generator) GetModulePath() string {
 	return g.coordinator.projectManager.GetModulePath()
 }
