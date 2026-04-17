@@ -73,9 +73,7 @@ func setVersion(projectRoot, toolName, version string) error {
 		return fmt.Errorf("version cannot be empty\n\nExample: andurel tool set-version %s 1.0.0", toolName)
 	}
 
-	if strings.HasPrefix(version, "v") {
-		version = version[1:]
-	}
+	version = strings.TrimPrefix(version, "v")
 	versionWithV := "v" + version
 
 	lockPath := filepath.Join(projectRoot, "andurel.lock")

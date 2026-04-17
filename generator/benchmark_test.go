@@ -13,14 +13,14 @@ func BenchmarkNewCoordinator(b *testing.B) {
 	// Change to a temp directory for benchmarking
 	tmpDir := b.TempDir()
 	originalWd, _ := os.Getwd()
-	defer os.Chdir(originalWd)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalWd) }()
+	_ = os.Chdir(tmpDir)
 
 	// Create minimal required structure
-	os.MkdirAll("database/migrations", 0755)
-	os.MkdirAll("router/routes", 0755)
-	os.WriteFile("go.mod", []byte("module test\n\ngo 1.21\n"), 0644)
-	os.WriteFile("database/sqlc.yaml", []byte("sql: []\n"), 0644)
+	_ = os.MkdirAll("database/migrations", 0755)
+	_ = os.MkdirAll("router/routes", 0755)
+	_ = os.WriteFile("go.mod", []byte("module test\n\ngo 1.21\n"), 0644)
+	_ = os.WriteFile("database/sqlc.yaml", []byte("sql: []\n"), 0644)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -35,14 +35,14 @@ func BenchmarkNewCoordinator(b *testing.B) {
 func BenchmarkConfigManagerLoad(b *testing.B) {
 	tmpDir := b.TempDir()
 	originalWd, _ := os.Getwd()
-	defer os.Chdir(originalWd)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalWd) }()
+	_ = os.Chdir(tmpDir)
 
 	// Create minimal required structure
-	os.MkdirAll("database/migrations", 0755)
-	os.MkdirAll("router/routes", 0755)
-	os.WriteFile("go.mod", []byte("module test\n\ngo 1.21\n"), 0644)
-	os.WriteFile("database/sqlc.yaml", []byte("sql: []\n"), 0644)
+	_ = os.MkdirAll("database/migrations", 0755)
+	_ = os.MkdirAll("router/routes", 0755)
+	_ = os.WriteFile("go.mod", []byte("module test\n\ngo 1.21\n"), 0644)
+	_ = os.WriteFile("database/sqlc.yaml", []byte("sql: []\n"), 0644)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -102,13 +102,13 @@ func BenchmarkValidateTableName(b *testing.B) {
 func BenchmarkFindGoModRoot(b *testing.B) {
 	tmpDir := b.TempDir()
 	originalWd, _ := os.Getwd()
-	defer os.Chdir(originalWd)
+	defer func() { _ = os.Chdir(originalWd) }()
 
 	// Create nested directory structure with go.mod at root
 	nestedPath := filepath.Join(tmpDir, "a", "b", "c", "d")
-	os.MkdirAll(nestedPath, 0755)
-	os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module test\n"), 0644)
-	os.Chdir(nestedPath)
+	_ = os.MkdirAll(nestedPath, 0755)
+	_ = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module test\n"), 0644)
+	_ = os.Chdir(nestedPath)
 
 	fm := files.NewUnifiedFileManager()
 
@@ -125,10 +125,10 @@ func BenchmarkFindGoModRoot(b *testing.B) {
 func BenchmarkProjectManagerGetModulePath(b *testing.B) {
 	tmpDir := b.TempDir()
 	originalWd, _ := os.Getwd()
-	defer os.Chdir(originalWd)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalWd) }()
+	_ = os.Chdir(tmpDir)
 
-	os.WriteFile("go.mod", []byte("module github.com/example/test\n\ngo 1.21\n"), 0644)
+	_ = os.WriteFile("go.mod", []byte("module github.com/example/test\n\ngo 1.21\n"), 0644)
 
 	pm, err := NewProjectManager()
 	if err != nil {
@@ -145,12 +145,12 @@ func BenchmarkProjectManagerGetModulePath(b *testing.B) {
 func BenchmarkMigrationManagerBuildCatalog(b *testing.B) {
 	tmpDir := b.TempDir()
 	originalWd, _ := os.Getwd()
-	defer os.Chdir(originalWd)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalWd) }()
+	_ = os.Chdir(tmpDir)
 
 	// Create migration directory and files
 	migrationDir := "internal/database/migrations"
-	os.MkdirAll(migrationDir, 0755)
+	_ = os.MkdirAll(migrationDir, 0755)
 
 	// Create a sample migration
 	migrationContent := `-- +goose Up
@@ -164,9 +164,9 @@ CREATE TABLE users (
 -- +goose Down
 DROP TABLE users;
 `
-	os.WriteFile(filepath.Join(migrationDir, "001_create_users.sql"), []byte(migrationContent), 0644)
-	os.WriteFile("go.mod", []byte("module test\n\ngo 1.21\n"), 0644)
-	os.WriteFile("sqlc.yaml", []byte("version: \"2\"\nsql:\n  - engine: \"postgresql\"\n    queries: \"internal/database/queries\"\n    schema: \"internal/database/migrations\"\n"), 0644)
+	_ = os.WriteFile(filepath.Join(migrationDir, "001_create_users.sql"), []byte(migrationContent), 0644)
+	_ = os.WriteFile("go.mod", []byte("module test\n\ngo 1.21\n"), 0644)
+	_ = os.WriteFile("sqlc.yaml", []byte("version: \"2\"\nsql:\n  - engine: \"postgresql\"\n    queries: \"internal/database/queries\"\n    schema: \"internal/database/migrations\"\n"), 0644)
 
 	config := &UnifiedConfig{
 		Database: DatabaseConfig{

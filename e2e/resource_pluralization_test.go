@@ -44,7 +44,6 @@ func TestResourcePluralization(t *testing.T) {
 		tableName        string
 		expectedPlural   string
 		expectedSingular string
-		columns          []string
 	}{
 		{
 			name:             "company",
@@ -52,10 +51,6 @@ func TestResourcePluralization(t *testing.T) {
 			tableName:        "companies",
 			expectedPlural:   "Companies",
 			expectedSingular: "Company",
-			columns: []string{
-				"name VARCHAR(200) NOT NULL",
-				"industry VARCHAR(100)",
-			},
 		},
 		{
 			name:             "project",
@@ -63,10 +58,6 @@ func TestResourcePluralization(t *testing.T) {
 			tableName:        "projects",
 			expectedPlural:   "Projects",
 			expectedSingular: "Project",
-			columns: []string{
-				"name VARCHAR(200) NOT NULL",
-				"description TEXT",
-			},
 		},
 	}
 
@@ -80,7 +71,7 @@ func TestResourcePluralization(t *testing.T) {
 			internal.AssertCommandSucceeds(t, err, "scaffold")
 
 			// Create the migration
-			createMigration(t, project, "000100_create_"+tc.tableName, tc.tableName, tc.columns)
+			createMigration(t, project, "000100_create_"+tc.tableName, tc.tableName, nil)
 
 			// Generate the resource
 			err = project.Generate("generate", "resource", tc.resourceName)
@@ -135,7 +126,6 @@ type pluralizationTestCase struct {
 	tableName        string
 	expectedPlural   string
 	expectedSingular string
-	columns          []string
 }
 
 func validateModelPluralization(t *testing.T, project *internal.Project, tc pluralizationTestCase) {

@@ -57,7 +57,7 @@ func TestReadDatabaseTypeFromSQLCYAML(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to get working directory: %v", err)
 			}
-			defer os.Chdir(originalDir)
+			defer func() { _ = os.Chdir(originalDir) }()
 
 			if err := os.Chdir(tmpDir); err != nil {
 				t.Fatalf("Failed to change to temp directory: %v", err)
@@ -122,7 +122,7 @@ func TestNewDefaultAppConfig_WithSQLCYAML(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to get working directory: %v", err)
 			}
-			defer os.Chdir(originalDir)
+			defer func() { _ = os.Chdir(originalDir) }()
 
 			if err := os.Chdir(tmpDir); err != nil {
 				t.Fatalf("Failed to change to temp directory: %v", err)
@@ -160,7 +160,7 @@ func TestNewDefaultAppConfig_FallbackWhenNoSQLCYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change to temp directory: %v", err)

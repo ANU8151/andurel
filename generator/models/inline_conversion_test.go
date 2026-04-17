@@ -80,8 +80,8 @@ func TestConstructorConversions__ProperlyHandlesNullableColumns(t *testing.T) {
 
 			originalWd, _ := os.Getwd()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tempDir)
 
 			migrationsDir := filepath.Join(
 				originalWd,
@@ -235,8 +235,8 @@ func TestConstructorConversions__FieldsExcludedCorrectly(t *testing.T) {
 
 			originalWd, _ := os.Getwd()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tempDir)
 
 			migrationsDir := filepath.Join(
 				originalWd,

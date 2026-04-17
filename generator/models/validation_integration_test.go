@@ -34,8 +34,8 @@ func TestModelFileGeneration_ValidPrimaryKeyTypes(t *testing.T) {
 			originalWd, _ := os.Getwd()
 
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tempDir)
 
 			migrationsDir := filepath.Join(originalWd, "testdata", "migrations", tt.migrationsDir)
 
@@ -93,8 +93,8 @@ func TestRefreshQueries__ValidatesIDColumns(t *testing.T) {
 
 			originalWd, _ := os.Getwd()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tempDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tempDir)
 
 			migrationsDir := filepath.Join(originalWd, "testdata", "migrations", tt.migrationsDir)
 			sqlPath := filepath.Join(queriesDir, tt.tableName+".sql")

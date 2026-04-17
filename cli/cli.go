@@ -20,7 +20,7 @@ func NewRootCommand(version, date string) *cobra.Command {
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			printBanner()
-			cmd.Help()
+			_ = cmd.Help()
 		},
 	}
 

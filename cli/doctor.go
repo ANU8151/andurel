@@ -588,9 +588,9 @@ func checkGoModTidy(rootDir string, verbose bool) checkResult {
 
 	// Ensure we restore original files when function exits
 	defer func() {
-		os.WriteFile(goModPath, goModOrig, 0o644)
+		_ = os.WriteFile(goModPath, goModOrig, 0o644)
 		if goSumOrig != nil {
-			os.WriteFile(goSumPath, goSumOrig, 0o644)
+			_ = os.WriteFile(goSumPath, goSumOrig, 0o644)
 		}
 	}()
 

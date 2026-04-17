@@ -58,7 +58,8 @@ func newMigrateCommand() *cobra.Command {
 	return cmd
 }
 
-func newSeedCommand() *cobra.Command {
+//nolint:unused
+func _newSeedCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "seed",
 		Short: "Run database seeds",
@@ -74,7 +75,8 @@ Edit this file to add your seed data using model factories.`,
 
 // Migration commands
 
-func newDBMigrationCommand() *cobra.Command {
+//nolint:unused
+func _newDBMigrationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "migration",
 		Aliases: []string{"m", "mig"},

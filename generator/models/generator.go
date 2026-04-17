@@ -1235,7 +1235,8 @@ func (g *Generator) determineFactoryDefault(fieldName, goType, sqlcType string) 
 	return fmt.Sprintf("%s{}", goType)
 }
 
-func (g *Generator) stringFactoryDefault(fieldName string) string {
+//nolint:unused
+func (g *Generator) _stringFactoryDefault(fieldName string) string {
 	lower := strings.ToLower(fieldName)
 
 	// Field name heuristics
@@ -1267,7 +1268,8 @@ func (g *Generator) stringFactoryDefault(fieldName string) string {
 	}
 }
 
-func (g *Generator) intFactoryDefault(fieldName string) string {
+//nolint:unused
+func (g *Generator) _intFactoryDefault(fieldName string) string {
 	lower := strings.ToLower(fieldName)
 
 	switch {

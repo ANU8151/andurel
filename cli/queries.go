@@ -134,7 +134,8 @@ const (
 	sqlcBaseRelativePath = "internal/storage/andurel_sqlc_config.yaml"
 )
 
-type sqlcConfig struct {
+//nolint:unused
+type _sqlcConfig struct {
 	SQL []struct {
 		Engine string `yaml:"engine"`
 		Gen    struct {
@@ -162,7 +163,8 @@ func sqlcBasePath(rootDir string) string {
 	return filepath.Join(rootDir, sqlcBaseRelativePath)
 }
 
-func validateQueriesSQLCFiles(rootDir string) error {
+//nolint:unused
+func _validateQueriesSQLCFiles(rootDir string) error {
 	_, err := validateSQLCConfigAgainstBase(rootDir)
 	return err
 }
@@ -352,7 +354,8 @@ func readYAMLAsMap(path string) (map[string]any, error) {
 	return result, nil
 }
 
-func validateSQLCOverlay(overlay map[string]any) error {
+//nolint:unused
+func _validateSQLCOverlay(overlay map[string]any) error {
 	if len(overlay) == 0 {
 		return nil
 	}
@@ -383,7 +386,8 @@ func validateSQLCOverlay(overlay map[string]any) error {
 	return nil
 }
 
-func mergeYAMLMaps(base, overlay map[string]any) map[string]any {
+//nolint:unused
+func _mergeYAMLMaps(base, overlay map[string]any) map[string]any {
 	result := make(map[string]any, len(base))
 	for key, value := range base {
 		result[key] = value
@@ -397,14 +401,14 @@ func mergeYAMLMaps(base, overlay map[string]any) map[string]any {
 		baseMap, baseIsMap := baseVal.(map[string]any)
 		overlayMap, overlayIsMap := overlayVal.(map[string]any)
 		if baseIsMap && overlayIsMap {
-			result[key] = mergeYAMLMaps(baseMap, overlayMap)
+			result[key] = _mergeYAMLMaps(baseMap, overlayMap)
 			continue
 		}
 		baseSlice, baseIsSlice := baseVal.([]any)
 		overlaySlice, overlayIsSlice := overlayVal.([]any)
 		if baseIsSlice && overlayIsSlice {
 			if key == "sql" {
-				if mergedSQL, ok := mergeSQLOverlayEntries(baseSlice, overlaySlice); ok {
+				if mergedSQL, ok := _mergeSQLOverlayEntries(baseSlice, overlaySlice); ok {
 					result[key] = mergedSQL
 					continue
 				}
@@ -420,7 +424,8 @@ func mergeYAMLMaps(base, overlay map[string]any) map[string]any {
 	return result
 }
 
-func mergeSQLOverlayEntries(baseSlice, overlaySlice []any) ([]any, bool) {
+//nolint:unused
+func _mergeSQLOverlayEntries(baseSlice, overlaySlice []any) ([]any, bool) {
 	if len(overlaySlice) == 0 {
 		return baseSlice, true
 	}
@@ -432,7 +437,7 @@ func mergeSQLOverlayEntries(baseSlice, overlaySlice []any) ([]any, bool) {
 	if !ok {
 		return nil, false
 	}
-	mergedFirst := mergeYAMLMaps(baseFirst, map[string]any{})
+	mergedFirst := _mergeYAMLMaps(baseFirst, map[string]any{})
 	for _, item := range overlaySlice {
 		entry, ok := item.(map[string]any)
 		if !ok {
@@ -450,7 +455,7 @@ func mergeSQLOverlayEntries(baseSlice, overlaySlice []any) ([]any, bool) {
 		if currentGen == nil {
 			currentGen = map[string]any{}
 		}
-		mergedFirst["gen"] = mergeYAMLMaps(currentGen, genMap)
+		mergedFirst["gen"] = _mergeYAMLMaps(currentGen, genMap)
 	}
 
 	merged := make([]any, 0, len(baseSlice))
@@ -459,12 +464,13 @@ func mergeSQLOverlayEntries(baseSlice, overlaySlice []any) ([]any, bool) {
 	return merged, true
 }
 
-func validateMergedSQLCConfig(data map[string]any) error {
+//nolint:unused
+func _validateMergedSQLCConfig(data map[string]any) error {
 	encoded, err := yaml.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to encode sqlc config for validation: %w", err)
 	}
-	var cfg sqlcConfig
+	var cfg _sqlcConfig
 	if err := yaml.Unmarshal(encoded, &cfg); err != nil {
 		return fmt.Errorf("failed to parse effective sqlc config: %w", err)
 	}
@@ -506,33 +512,35 @@ func validateMergedSQLCConfig(data map[string]any) error {
 	return nil
 }
 
-func marshalCanonicalSQLC(data map[string]any) ([]byte, error) {
+//nolint:unused
+func _marshalCanonicalSQLC(data map[string]any) ([]byte, error) {
 	root := &yaml.Node{Kind: yaml.MappingNode}
-	appendYAMLMapping(root, "version", data["version"])
+	_appendYAMLMapping(root, "version", data["version"])
 	if sqlRaw, ok := data["sql"]; ok {
-		sqlNode, err := buildSQLNode(sqlRaw)
+		sqlNode, err := _buildSQLNode(sqlRaw)
 		if err != nil {
 			return nil, err
 		}
 		root.Content = append(root.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: "sql"}, sqlNode)
 	}
-	for _, key := range sortedKeysExcept(data, "version", "sql") {
-		appendYAMLMapping(root, key, data[key])
+	for _, key := range _sortedKeysExcept(data, "version", "sql") {
+		_appendYAMLMapping(root, key, data[key])
 	}
 	doc := &yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{root}}
 	return yaml.Marshal(doc)
 }
 
-func buildSQLNode(value any) (*yaml.Node, error) {
+//nolint:unused
+func _buildSQLNode(value any) (*yaml.Node, error) {
 	sqlList, ok := value.([]any)
 	if !ok {
-		return toYAMLNode(value)
+		return _toYAMLNode(value)
 	}
 	seq := &yaml.Node{Kind: yaml.SequenceNode}
 	for _, item := range sqlList {
 		sqlMap, ok := item.(map[string]any)
 		if !ok {
-			node, err := toYAMLNode(item)
+			node, err := _toYAMLNode(item)
 			if err != nil {
 				return nil, err
 			}
@@ -540,83 +548,86 @@ func buildSQLNode(value any) (*yaml.Node, error) {
 			continue
 		}
 		entry := &yaml.Node{Kind: yaml.MappingNode}
-		appendYAMLIfPresent(entry, sqlMap, "engine")
-		appendYAMLIfPresent(entry, sqlMap, "queries")
-		appendYAMLIfPresent(entry, sqlMap, "schema")
+		_appendYAMLIfPresent(entry, sqlMap, "engine")
+		_appendYAMLIfPresent(entry, sqlMap, "queries")
+		_appendYAMLIfPresent(entry, sqlMap, "schema")
 		if genRaw, ok := sqlMap["gen"]; ok {
-			genNode, err := buildGenNode(genRaw)
+			genNode, err := _buildGenNode(genRaw)
 			if err != nil {
 				return nil, err
 			}
 			entry.Content = append(entry.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: "gen"}, genNode)
 		}
-		for _, key := range sortedKeysExcept(sqlMap, "engine", "queries", "schema", "gen") {
-			appendYAMLMapping(entry, key, sqlMap[key])
+		for _, key := range _sortedKeysExcept(sqlMap, "engine", "queries", "schema", "gen") {
+			_appendYAMLMapping(entry, key, sqlMap[key])
 		}
 		seq.Content = append(seq.Content, entry)
 	}
 	return seq, nil
 }
 
-func buildGenNode(value any) (*yaml.Node, error) {
+//nolint:unused
+func _buildGenNode(value any) (*yaml.Node, error) {
 	genMap, ok := value.(map[string]any)
 	if !ok {
-		return toYAMLNode(value)
+		return _toYAMLNode(value)
 	}
 	gen := &yaml.Node{Kind: yaml.MappingNode}
 	if goRaw, ok := genMap["go"]; ok {
-		goNode, err := buildGoNode(goRaw)
+		goNode, err := _buildGoNode(goRaw)
 		if err != nil {
 			return nil, err
 		}
 		gen.Content = append(gen.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: "go"}, goNode)
 	}
-	for _, key := range sortedKeysExcept(genMap, "go") {
-		appendYAMLMapping(gen, key, genMap[key])
+	for _, key := range _sortedKeysExcept(genMap, "go") {
+		_appendYAMLMapping(gen, key, genMap[key])
 	}
 	return gen, nil
 }
 
-func buildGoNode(value any) (*yaml.Node, error) {
+//nolint:unused
+func _buildGoNode(value any) (*yaml.Node, error) {
 	goMap, ok := value.(map[string]any)
 	if !ok {
-		return toYAMLNode(value)
+		return _toYAMLNode(value)
 	}
 	goNode := &yaml.Node{Kind: yaml.MappingNode}
-	appendYAMLIfPresent(goNode, goMap, "package")
-	appendYAMLIfPresent(goNode, goMap, "sql_package")
-	appendYAMLIfPresent(goNode, goMap, "out")
-	appendYAMLIfPresent(goNode, goMap, "emit_methods_with_db_argument")
-	appendYAMLIfPresent(goNode, goMap, "emit_sql_as_comment")
-	appendYAMLIfPresent(goNode, goMap, "output_db_file_name")
-	appendYAMLIfPresent(goNode, goMap, "output_models_file_name")
+	_appendYAMLIfPresent(goNode, goMap, "package")
+	_appendYAMLIfPresent(goNode, goMap, "sql_package")
+	_appendYAMLIfPresent(goNode, goMap, "out")
+	_appendYAMLIfPresent(goNode, goMap, "emit_methods_with_db_argument")
+	_appendYAMLIfPresent(goNode, goMap, "emit_sql_as_comment")
+	_appendYAMLIfPresent(goNode, goMap, "output_db_file_name")
+	_appendYAMLIfPresent(goNode, goMap, "output_models_file_name")
 	if overridesRaw, ok := goMap["overrides"]; ok {
-		overridesNode, err := buildOverridesNode(overridesRaw)
+		overridesNode, err := _buildOverridesNode(overridesRaw)
 		if err != nil {
 			return nil, err
 		}
 		goNode.Content = append(goNode.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: "overrides"}, overridesNode)
 	}
-	for _, key := range sortedKeysExcept(
+	for _, key := range _sortedKeysExcept(
 		goMap,
 		"package", "sql_package", "out", "emit_methods_with_db_argument",
 		"emit_sql_as_comment", "output_db_file_name", "output_models_file_name", "overrides",
 	) {
-		appendYAMLMapping(goNode, key, goMap[key])
+		_appendYAMLMapping(goNode, key, goMap[key])
 	}
 	return goNode, nil
 }
 
-func buildOverridesNode(value any) (*yaml.Node, error) {
+//nolint:unused
+func _buildOverridesNode(value any) (*yaml.Node, error) {
 	list, ok := value.([]any)
 	if !ok {
-		return toYAMLNode(value)
+		return _toYAMLNode(value)
 	}
 	seq := &yaml.Node{Kind: yaml.SequenceNode}
 	for _, item := range list {
 		overrideMap, ok := item.(map[string]any)
 		if !ok {
-			node, err := toYAMLNode(item)
+			node, err := _toYAMLNode(item)
 			if err != nil {
 				return nil, err
 			}
@@ -624,33 +635,36 @@ func buildOverridesNode(value any) (*yaml.Node, error) {
 			continue
 		}
 		entry := &yaml.Node{Kind: yaml.MappingNode}
-		appendYAMLIfPresent(entry, overrideMap, "db_type")
-		appendYAMLIfPresent(entry, overrideMap, "go_type")
-		for _, key := range sortedKeysExcept(overrideMap, "db_type", "go_type") {
-			appendYAMLMapping(entry, key, overrideMap[key])
+		_appendYAMLIfPresent(entry, overrideMap, "db_type")
+		_appendYAMLIfPresent(entry, overrideMap, "go_type")
+		for _, key := range _sortedKeysExcept(overrideMap, "db_type", "go_type") {
+			_appendYAMLMapping(entry, key, overrideMap[key])
 		}
 		seq.Content = append(seq.Content, entry)
 	}
 	return seq, nil
 }
 
-func appendYAMLMapping(node *yaml.Node, key string, value any) {
-	valueNode, err := toYAMLNode(value)
+//nolint:unused
+func _appendYAMLMapping(node *yaml.Node, key string, value any) {
+	valueNode, err := _toYAMLNode(value)
 	if err != nil {
 		valueNode = &yaml.Node{Kind: yaml.ScalarNode, Value: fmt.Sprint(value)}
 	}
 	node.Content = append(node.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: key}, valueNode)
 }
 
-func appendYAMLIfPresent(node *yaml.Node, data map[string]any, key string) {
+//nolint:unused
+func _appendYAMLIfPresent(node *yaml.Node, data map[string]any, key string) {
 	value, ok := data[key]
 	if !ok {
 		return
 	}
-	appendYAMLMapping(node, key, value)
+	_appendYAMLMapping(node, key, value)
 }
 
-func toYAMLNode(value any) (*yaml.Node, error) {
+//nolint:unused
+func _toYAMLNode(value any) (*yaml.Node, error) {
 	raw, err := yaml.Marshal(value)
 	if err != nil {
 		return nil, err
@@ -665,7 +679,8 @@ func toYAMLNode(value any) (*yaml.Node, error) {
 	return doc.Content[0], nil
 }
 
-func sortedKeysExcept(data map[string]any, excluded ...string) []string {
+//nolint:unused
+func _sortedKeysExcept(data map[string]any, excluded ...string) []string {
 	excludeSet := make(map[string]struct{}, len(excluded))
 	for _, key := range excluded {
 		excludeSet[key] = struct{}{}

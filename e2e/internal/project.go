@@ -122,12 +122,8 @@ func copyFile(src, dst string) error {
 		return err
 	}
 
-	defer func() error {
-		if err := dstFile.Close(); err != nil {
-			return err
-		}
-
-		return nil
+	defer func() {
+		_ = dstFile.Close()
 	}()
 
 	_, err = io.Copy(dstFile, srcFile)
