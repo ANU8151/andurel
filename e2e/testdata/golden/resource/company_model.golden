@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"testapp/internal/storage"
 	"testapp/models/internal/db"
@@ -14,8 +13,6 @@ import (
 
 type Company struct {
 	ID        uuid.UUID
-	Name      string
-	Industry  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -34,8 +31,6 @@ func FindCompany(
 }
 
 type CreateCompanyData struct {
-	Name     string
-	Industry string
 }
 
 func CreateCompany(
@@ -46,12 +41,7 @@ func CreateCompany(
 	if err := Validate.Struct(data); err != nil {
 		return Company{}, errors.Join(ErrDomainValidation, err)
 	}
-	params := db.InsertCompanyParams{
-		ID:       uuid.New(),
-		Name:     data.Name,
-		Industry: pgtype.Text{String: data.Industry, Valid: true},
-	}
-	row, err := queries.InsertCompany(ctx, exec, params)
+	row, err := queries.InsertCompany(ctx, exec, data.ID)
 	if err != nil {
 		return Company{}, err
 	}
@@ -61,8 +51,6 @@ func CreateCompany(
 
 type UpdateCompanyData struct {
 	ID        uuid.UUID
-	Name      string
-	Industry  string
 	UpdatedAt time.Time
 }
 
@@ -76,9 +64,7 @@ func UpdateCompany(
 	}
 
 	params := db.UpdateCompanyParams{
-		ID:       data.ID,
-		Name:     data.Name,
-		Industry: pgtype.Text{String: data.Industry, Valid: true},
+		ID: data.ID,
 	}
 
 	row, err := queries.UpdateCompany(ctx, exec, params)
@@ -181,12 +167,7 @@ func UpsertCompany(
 	if err := Validate.Struct(data); err != nil {
 		return Company{}, errors.Join(ErrDomainValidation, err)
 	}
-	params := db.UpsertCompanyParams{
-		ID:       uuid.New(),
-		Name:     data.Name,
-		Industry: pgtype.Text{String: data.Industry, Valid: true},
-	}
-	row, err := queries.UpsertCompany(ctx, exec, params)
+	row, err := queries.UpsertCompany(ctx, exec, data.ID)
 	if err != nil {
 		return Company{}, err
 	}
@@ -197,8 +178,6 @@ func UpsertCompany(
 func rowToCompany(row db.Company) Company {
 	return Company{
 		ID:        row.ID,
-		Name:      row.Name,
-		Industry:  row.Industry.String,
 		CreatedAt: row.CreatedAt.Time,
 		UpdatedAt: row.UpdatedAt.Time,
 	}

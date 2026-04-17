@@ -71,8 +71,6 @@ func (p Projects) New(etx *echo.Context) error {
 }
 
 type CreateProjectFormPayload struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
 }
 
 func (p Projects) Create(etx *echo.Context) error {
@@ -88,10 +86,7 @@ func (p Projects) Create(etx *echo.Context) error {
 		return render(etx, views.NotFound())
 	}
 
-	data := models.CreateProjectData{
-		Name:        payload.Name,
-		Description: payload.Description,
-	}
+	data := models.CreateProjectData{}
 
 	project, err := models.CreateProject(
 		etx.Request().Context(),
@@ -127,8 +122,6 @@ func (p Projects) Edit(etx *echo.Context) error {
 }
 
 type UpdateProjectFormPayload struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
 }
 
 func (p Projects) Update(etx *echo.Context) error {
@@ -150,9 +143,7 @@ func (p Projects) Update(etx *echo.Context) error {
 	}
 
 	data := models.UpdateProjectData{
-		ID:          projectID,
-		Name:        payload.Name,
-		Description: payload.Description,
+		ID: projectID,
 	}
 
 	project, err := models.UpdateProject(

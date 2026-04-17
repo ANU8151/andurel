@@ -71,8 +71,6 @@ func (c Companies) New(etx *echo.Context) error {
 }
 
 type CreateCompanyFormPayload struct {
-	Name     string `json:"name"`
-	Industry string `json:"industry"`
 }
 
 func (c Companies) Create(etx *echo.Context) error {
@@ -88,10 +86,7 @@ func (c Companies) Create(etx *echo.Context) error {
 		return render(etx, views.NotFound())
 	}
 
-	data := models.CreateCompanyData{
-		Name:     payload.Name,
-		Industry: payload.Industry,
-	}
+	data := models.CreateCompanyData{}
 
 	company, err := models.CreateCompany(
 		etx.Request().Context(),
@@ -127,8 +122,6 @@ func (c Companies) Edit(etx *echo.Context) error {
 }
 
 type UpdateCompanyFormPayload struct {
-	Name     string `json:"name"`
-	Industry string `json:"industry"`
 }
 
 func (c Companies) Update(etx *echo.Context) error {
@@ -150,9 +143,7 @@ func (c Companies) Update(etx *echo.Context) error {
 	}
 
 	data := models.UpdateCompanyData{
-		ID:       companyID,
-		Name:     payload.Name,
-		Industry: payload.Industry,
+		ID: companyID,
 	}
 
 	company, err := models.UpdateCompany(

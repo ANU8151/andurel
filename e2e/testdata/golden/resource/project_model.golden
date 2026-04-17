@@ -6,18 +6,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"testapp/internal/storage"
 	"testapp/models/internal/db"
 )
 
 type Project struct {
-	ID          uuid.UUID
-	Name        string
-	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func FindProject(
@@ -34,8 +31,6 @@ func FindProject(
 }
 
 type CreateProjectData struct {
-	Name        string
-	Description string
 }
 
 func CreateProject(
@@ -46,12 +41,7 @@ func CreateProject(
 	if err := Validate.Struct(data); err != nil {
 		return Project{}, errors.Join(ErrDomainValidation, err)
 	}
-	params := db.InsertProjectParams{
-		ID:          uuid.New(),
-		Name:        data.Name,
-		Description: pgtype.Text{String: data.Description, Valid: true},
-	}
-	row, err := queries.InsertProject(ctx, exec, params)
+	row, err := queries.InsertProject(ctx, exec, data.ID)
 	if err != nil {
 		return Project{}, err
 	}
@@ -60,10 +50,8 @@ func CreateProject(
 }
 
 type UpdateProjectData struct {
-	ID          uuid.UUID
-	Name        string
-	Description string
-	UpdatedAt   time.Time
+	ID        uuid.UUID
+	UpdatedAt time.Time
 }
 
 func UpdateProject(
@@ -76,9 +64,7 @@ func UpdateProject(
 	}
 
 	params := db.UpdateProjectParams{
-		ID:          data.ID,
-		Name:        data.Name,
-		Description: pgtype.Text{String: data.Description, Valid: true},
+		ID: data.ID,
 	}
 
 	row, err := queries.UpdateProject(ctx, exec, params)
@@ -181,12 +167,7 @@ func UpsertProject(
 	if err := Validate.Struct(data); err != nil {
 		return Project{}, errors.Join(ErrDomainValidation, err)
 	}
-	params := db.UpsertProjectParams{
-		ID:          uuid.New(),
-		Name:        data.Name,
-		Description: pgtype.Text{String: data.Description, Valid: true},
-	}
-	row, err := queries.UpsertProject(ctx, exec, params)
+	row, err := queries.UpsertProject(ctx, exec, data.ID)
 	if err != nil {
 		return Project{}, err
 	}
@@ -196,10 +177,8 @@ func UpsertProject(
 
 func rowToProject(row db.Project) Project {
 	return Project{
-		ID:          row.ID,
-		Name:        row.Name,
-		Description: row.Description.String,
-		CreatedAt:   row.CreatedAt.Time,
-		UpdatedAt:   row.UpdatedAt.Time,
+		ID:        row.ID,
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
 	}
 }

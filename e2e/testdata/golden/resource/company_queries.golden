@@ -6,14 +6,14 @@ select * from companies;
 
 -- name: InsertCompany :one
 insert into
-    companies (id, name, industry, created_at, updated_at)
+    companies (id, created_at, updated_at)
 values
-    ($1, $2, $3, now(), now())
+    ($1, now(), now())
 returning *;
 
 -- name: UpdateCompany :one
 update companies
-    set name=$2, industry=$3, updated_at=now()
+    set updated_at=now()
 where id = $1
 returning *;
 
@@ -30,8 +30,8 @@ select count(*) from companies;
 
 -- name: UpsertCompany :one
 insert into
-    companies (id, name, industry, created_at, updated_at)
+    companies (id, created_at, updated_at)
 values
-    ($1, $2, $3, now(), now())
-on conflict (id) do update set name=excluded.name, industry=excluded.industry, updated_at=now()
+    ($1, now(), now())
+on conflict (id) do update set updated_at=now()
 returning *;

@@ -23,8 +23,6 @@ templ ProjectIndex(projects []models.Project) {
 						<table class="w-full caption-bottom text-sm">
 							<thead class="[&_tr]:border-b [&_tr]:border-base-300">
 								<tr class="border-b border-base-300 transition-colors hover:bg-base-200/50">
-									<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">Name</th>
-									<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">Description</th>
 									<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">Created At</th>
 									<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">Updated At</th>
 									<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">Actions</th>
@@ -33,8 +31,6 @@ templ ProjectIndex(projects []models.Project) {
 							<tbody class="[&_tr:last-child]:border-0">
 								for _, project := range projects {
 									<tr class="border-b border-base-300 transition-colors hover:bg-base-200/50">
-										<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">{ project.Name }</td>
-										<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">{ project.Description }</td>
 										<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">{ project.CreatedAt.String() }</td>
 										<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">{ project.UpdatedAt.String() }</td>
 										<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
@@ -69,14 +65,6 @@ templ ProjectShow(project models.Project) {
 					<div class="p-6 pt-0">
 						<div class="grid gap-5 sm:grid-cols-2">
 							<div class="space-y-1">
-								<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60">Name</label>
-								<p class="text-sm text-base-content">{ project.Name }</p>
-							</div>
-							<div class="space-y-1">
-								<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60">Description</label>
-								<p class="text-sm text-base-content">{ project.Description }</p>
-							</div>
-							<div class="space-y-1">
 								<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60">Created At</label>
 								<p class="text-sm text-base-content">{ project.CreatedAt.String() }</p>
 							</div>
@@ -104,16 +92,7 @@ templ ProjectNew() {
 					<div class="p-6 pt-0">
 						<form class="space-y-5" data-indicator:submitting data-on:submit={ "!$submitting && " + hypermedia.DataAction(http.MethodPost, routes.ProjectCreate.URL()) }>
 							<fieldset data-attr:disabled="$submitting">
-								<div class="space-y-4">
-									<div class="space-y-1">
-										<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for="name">Name</label>
-										<input type="text" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="name"/>
-									</div>
-									<div class="space-y-1">
-										<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for="description">Description</label>
-										<input type="text" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="description"/>
-									</div>
-								</div>
+								<div class="space-y-4"></div>
 								<div class="mt-6 space-y-3">
 									<button type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field w-full">Create Project</button>
 									<a class="inline-flex h-9 w-full items-center justify-center rounded-field border border-base-300 px-4 py-2 text-sm font-medium text-base-content/80 transition hover:bg-base-200/70 hover:text-base-content" href={ renderer.ResolveBackURL(ctx, routes.ProjectIndex.URL()) }>Back to List</a>
@@ -139,16 +118,7 @@ templ ProjectEdit(project models.Project) {
 					<div class="p-6 pt-0">
 						<form class="space-y-5" data-indicator:submitting data-on:submit={ "!$submitting && " + hypermedia.DataAction(http.MethodPut, routes.ProjectUpdate.URL(project.ID)) }>
 							<fieldset data-attr:disabled="$submitting">
-								<div class="space-y-4">
-									<div class="space-y-1">
-										<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for="name">Name</label>
-										<input type="text" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="name" value={ project.Name }/>
-									</div>
-									<div class="space-y-1">
-										<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for="description">Description</label>
-										<input type="text" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="description" value={ project.Description }/>
-									</div>
-								</div>
+								<div class="space-y-4"></div>
 								<div class="mt-6 space-y-3">
 									<button type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field w-full">Update Project</button>
 									<a class="inline-flex h-9 w-full items-center justify-center rounded-field border border-base-300 px-4 py-2 text-sm font-medium text-base-content/80 transition hover:bg-base-200/70 hover:text-base-content" href={ renderer.ResolveBackURL(ctx, routes.ProjectIndex.URL()) }>Back to List</a>
