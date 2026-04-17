@@ -44,7 +44,7 @@ The core philosophy around resource generation in andurel, is that it should be 
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[SQLC](https://sqlc.dev/)** - Type-safe SQL code generation
 - **[Templ](https://templ.guide/)** - Type-safe HTML templates
-- **[Datastar](https://data-star.dev/)** - Hypermedia-driven frontend interactivity
+- **[Datastar](https://data-star.dev/)** / **[HTMX](https://htmx.org/)** - Choose your hypermedia framework for frontend interactivity
 - **[River](https://riverqueue.com/)** - PostgreSQL-backed background jobs and workflows
 - **[OpenTelemetry](https://opentelemetry.io/)** - Built-in observability
 - **[PostgreSQL](https://www.postgresql.org/)** - Powerful open-source database with pgx driver and native UUID support
@@ -71,8 +71,12 @@ Andurel gives you choices when creating a new project:
 > Note: `--css vanilla` is currently WIP and not properly supported before `v1.0.0`. Use Tailwind for now.
 
 ```bash
-# Create a new project with defaults (PostgreSQL + Tailwind CSS)
+# Create a new project with defaults (PostgreSQL + Tailwind CSS + Datastar)
 andurel new myapp
+
+# Choose your hypermedia framework:
+andurel new myapp --hypermedia=htmx       # Use HTMX instead of Datastar
+andurel new myapp --hypermedia=both       # Use both Datastar and HTMX
 
 # Add extensions for additional features:
 andurel new myapp -e docker              # Add Dockerfile for containerization
@@ -146,7 +150,12 @@ andurel run (alias: r)
 Scaffolds a new Andurel project.
 
 ```bash
-andurel new [project-name] --css/-c --extensions/-e
+andurel new [project-name] --css/-c --hypermedia/-m --extensions/-e
+
+# Options:
+#   --css tailwind|vanilla     CSS framework (default: tailwind)
+#   --hypermedia datastar|htmx|both   Frontend interactivity (default: datastar)
+#   --extensions               Add extensions (docker, aws-ses, etc.)
 ```
 
 ### Generate
@@ -361,7 +370,8 @@ Andurel is built on top of excellent open-source projects:
 - **[Echo](https://echo.labstack.com/)** - High-performance HTTP router and framework
 - **[SQLC](https://sqlc.dev/)** - Type-safe SQL code generation
 - **[Templ](https://templ.guide/)** - Type-safe Go templates
-- **[Datastar](https://data-star.dev/)** - Hypermedia-driven frontend interactivity (RC6)
+- **[Datastar](https://data-star.dev/)** - Hypermedia-driven frontend interactivity (SSE + signals)
+- **[HTMX](https://htmx.org/)** - Hypermedia-driven frontend interactivity (classic AJAX + SSE)
 - **[River](https://riverqueue.com/)** - Fast PostgreSQL-backed job queue and workflows
 - **[OpenTelemetry](https://opentelemetry.io/)** - Observability framework for logs, traces, and metrics
 - **[pgx](https://github.com/jackc/pgx)** - PostgreSQL driver and toolkit

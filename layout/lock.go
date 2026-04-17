@@ -18,10 +18,11 @@ type AndurelLock struct {
 }
 
 type ScaffoldConfig struct {
-	ProjectName  string   `json:"projectName"`
-	Database     string   `json:"database"`
-	CSSFramework string   `json:"cssFramework"`
-	Extensions   []string `json:"extensions,omitempty"`
+	ProjectName         string   `json:"projectName"`
+	Database            string   `json:"database"`
+	CSSFramework        string   `json:"cssFramework"`
+	HypermediaFramework string   `json:"hypermediaFramework,omitempty"`
+	Extensions          []string `json:"extensions,omitempty"`
 }
 
 type Extension struct {

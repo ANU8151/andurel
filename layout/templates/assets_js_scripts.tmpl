@@ -1,1 +1,11 @@
+// Andurel Scripts Module
+// Dynamically imports hypermedia framework based on configuration
+
+{{if or (eq .HypermediaFramework "datastar") (eq .HypermediaFramework "both")}}
 import "./datastar_1-0-0-rc6.min.js"
+{{end}}
+
+{{if or (eq .HypermediaFramework "htmx") (eq .HypermediaFramework "both")}}
+// HTMX is loaded via CDN for simplicity
+// For production, consider self-hosting: https://htmx.org/docs/#installing
+{{end}}

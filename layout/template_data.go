@@ -14,6 +14,7 @@ type TemplateData struct {
 	ModuleName           string
 	Database             string // Always "postgresql"
 	CSSFramework         string
+	HypermediaFramework  string // "datastar", "htmx", or "both"
 	GoVersion            string
 	SessionKey           string
 	SessionEncryptionKey string

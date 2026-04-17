@@ -1,0 +1,215 @@
+package views
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+	"{{.ModulePath}}/internal/renderer"
+	"{{.ModulePath}}/models"
+	"{{.ModulePath}}/router/routes"
+)
+
+templ {{.ResourceName}}Index({{.PluralName}} []models.{{.ResourceName}}) {
+	@base() {
+		<main class="flex-1 px-6 py-10">
+			<div class="mx-auto flex w-full max-w-5xl flex-col gap-6">
+				<div class="flex flex-wrap items-center justify-between gap-4">
+					<h1 class="text-2xl font-semibold tracking-tight text-base-content">{ Plural .ResourceName }</h1>
+					<a
+						href={ routes.{{.ResourceName}}New.URL() }
+						class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field"
+					>New {{.ResourceName}}</a>
+				</div>
+				if len({{.PluralName}}) == 0 {
+					<p class="text-sm text-base-content/60">No {{.PluralName}} found.</p>
+				} else {
+					<div
+						id="{{.ResourceName | ToLower}}-list"
+						hx-get={ routes.{{.ResourceName}}Index.URL() }
+						hx-trigger="reload-list from:body"
+						hx-swap="innerHTML"
+					>
+						<div class="relative w-full overflow-auto">
+							<table class="w-full caption-bottom text-sm">
+								<thead class="[&_tr]:border-b [&_tr]:border-base-300">
+									<tr class="border-b border-base-300 transition-colors hover:bg-base-200/50">
+										{{range .Fields}}<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">{ .DisplayName }</th>
+										{{end}}<th class="h-10 px-4 text-left align-middle font-medium text-base-content/60 [&:has([role=checkbox])]:pr-0">Actions</th>
+									</tr>
+								</thead>
+								<tbody class="[&_tr:last-child]:border-0">
+									for _, {{.ResourceName | ToLower}} := range {{.PluralName}} {
+										<tr class="border-b border-base-300 transition-colors hover:bg-base-200/50">
+											{{range .Fields}}<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">{ StringTableDisplay . $.ResourceName }</td>
+											{{end}}<td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+												<div class="flex flex-wrap gap-3 text-sm">
+													<a
+														class="text-base-content/80 hover:text-base-content"
+														href={ routes.{{$.ResourceName}}Show.URL({{$.ResourceName | ToLower}}.ID) }
+													>View</a>
+													<a
+														class="text-base-content/80 hover:text-base-content"
+														href={ routes.{{$.ResourceName}}Edit.URL({{$.ResourceName | ToLower}}.ID) }
+													>Edit</a>
+												</div>
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				}
+			</div>
+		</main>
+	}
+}
+
+templ {{.ResourceName}}Show({{.ResourceName | ToLower}} models.{{.ResourceName}}) {
+	@base() {
+		<main class="flex-1 px-6 py-10">
+			<div class="mx-auto flex w-full max-w-4xl flex-col gap-6">
+				<div class="flex flex-wrap items-center justify-between gap-4">
+					<h1 class="text-2xl font-semibold tracking-tight text-base-content">{ .ResourceName } Details</h1>
+					<div class="flex flex-wrap items-center gap-3">
+						<a
+							href={ routes.{{.ResourceName}}Edit.URL({{.ResourceName | ToLower}}.ID) }
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field"
+						>Edit</a>
+						<a
+							class="text-sm text-base-content/70 hover:text-base-content"
+							href={ renderer.ResolveBackURL(ctx, routes.{{.ResourceName}}Index.URL()) }
+						>Back to List</a>
+					</div>
+				</div>
+				<div class="rounded-box border border-base-300 bg-base-100 shadow-sm">
+					<div class="p-6 pt-0">
+						<div class="grid gap-5 sm:grid-cols-2">
+							{{range .Fields}}<div class="space-y-1">
+								<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60">{ .DisplayName }</label>
+								<p class="text-sm text-base-content">{ StringDisplay . $.ResourceName }</p>
+							</div>
+							{{end}}
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	}
+}
+
+templ {{.ResourceName}}New() {
+	@base() {
+		<main class="flex-1 flex items-center justify-center px-6 py-10">
+			<div class="mx-auto flex w-full max-w-md flex-col gap-6">
+				<div class="rounded-box border border-base-300 bg-base-100 shadow-sm">
+					<div class="flex flex-col space-y-1.5 p-6">
+						<h3 class="text-lg font-semibold leading-none tracking-tight text-base-content">New {{.ResourceName}}</h3>
+						<p class="text-sm text-base-content/60">Enter the details for the new {{.ResourceName | ToLower}}.</p>
+					</div>
+					<div class="p-6 pt-0">
+						<form
+							id="new-{{.ResourceName | ToLower}}-form"
+							hx-post={ routes.{{.ResourceName}}Create.URL() }
+							hx-swap="none"
+							hx-on::after-request={ fmt.Sprintf("if(event.detail.successful) { document.body.dispatchEvent(new CustomEvent('reload-list')); %s }", "this.reset()") }
+						>
+							<div class="space-y-4">
+								{{range .Fields}}{{if not .IsSystemField}}{{if eq .InputType "checkbox"}}<div class="flex items-center gap-2">
+									<input type="checkbox" name={ strings.ToLower(.CamelCase) } class="h-4 w-4 shrink-0 rounded border border-base-300 bg-base-200 accent-primary transition focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+								</div>
+								{{else if eq .InputType "date"}}<div class="space-y-1">
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+									<input type="date" name={ strings.ToLower(.CamelCase) } class="flex h-9 w-full rounded-field border border-base-300 bg-base-200 px-3 py-1 pr-8 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+								</div>
+								{{else if eq .InputType "number"}}<div class="space-y-1">
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+									<input type="number" name={ strings.ToLower(.CamelCase) } class="flex h-9 w-full rounded-field border border-base-300 bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+								</div>
+								{{else}}<div class="space-y-1">
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+									<input type="text" name={ strings.ToLower(.CamelCase) } class="flex h-9 w-full rounded-field border border-base-300 bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+								</div>
+								{{end}}{{end}}{{end}}
+							</div>
+							<div class="mt-6 space-y-3">
+								<button type="submit" class="htmx-indicator inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field w-full">
+									<span class="htmx-spinner">Creating...</span>
+								</button>
+								<a
+									class="inline-flex h-9 w-full items-center justify-center rounded-field border border-base-300 px-4 py-2 text-sm font-medium text-base-content/80 transition hover:bg-base-200/70 hover:text-base-content"
+									href={ renderer.ResolveBackURL(ctx, routes.{{.ResourceName}}Index.URL()) }
+								>Back to List</a>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</main>
+	}
+}
+
+templ {{.ResourceName}}Edit({{.ResourceName | ToLower}} models.{{.ResourceName}}) {
+	@base() {
+		<main class="flex-1 flex items-center justify-center px-6 py-10">
+			<div class="mx-auto flex w-full max-w-md flex-col gap-6">
+				<div class="rounded-box border border-base-300 bg-base-100 shadow-sm">
+					<div class="flex flex-col space-y-1.5 p-6">
+						<h3 class="text-lg font-semibold leading-none tracking-tight text-base-content">Edit {{.ResourceName}}</h3>
+						<p class="text-sm text-base-content/60">Update the details for this {{.ResourceName | ToLower}}.</p>
+					</div>
+					<div class="p-6 pt-0">
+						<form
+							id="edit-{{.ResourceName | ToLower}}-form"
+							hx-put={ routes.{{.ResourceName}}Update.URL({{.ResourceName | ToLower}}.ID) }
+							hx-swap="none"
+							hx-on::after-request="if(event.detail.successful) { document.body.dispatchEvent(new CustomEvent('reload-list')) }"
+						>
+							<div class="space-y-4">
+								{{range .Fields}}{{if not .IsSystemField}}{{if eq .InputType "checkbox"}}<div class="flex items-center gap-2">
+									<input type="checkbox" name={ strings.ToLower(.CamelCase) } if { FieldRef . $.ResourceName } { checked } class="h-4 w-4 shrink-0 rounded border border-base-300 bg-base-200 accent-primary transition focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+								</div>
+								{{else if eq .InputType "date"}}<div class="space-y-1">
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+									<input type="date" name={ strings.ToLower(.CamelCase) } value={ {{StringValue . $.ResourceName}} } class="flex h-9 w-full rounded-field border border-base-300 bg-base-200 px-3 py-1 pr-8 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+								</div>
+								{{else if eq .InputType "number"}}<div class="space-y-1">
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+									<input type="number" name={ strings.ToLower(.CamelCase) } value={ {{StringValue . $.ResourceName}} } class="flex h-9 w-full rounded-field border border-base-300 bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+								</div>
+								{{else}}<div class="space-y-1">
+									<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for={ strings.ToLower(.CamelCase) }>{ .DisplayName }</label>
+									<input type="text" name={ strings.ToLower(.CamelCase) } value={ {{StringValue . $.ResourceName}} } class="flex h-9 w-full rounded-field border border-base-300 bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60" />
+								</div>
+								{{end}}{{end}}{{end}}
+							</div>
+							<div class="mt-6 space-y-3">
+								<button type="submit" class="htmx-indicator inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field w-full">
+									<span class="htmx-spinner">Updating...</span>
+								</button>
+								<a
+									class="inline-flex h-9 w-full items-center justify-center rounded-field border border-base-300 px-4 py-2 text-sm font-medium text-base-content/80 transition hover:bg-base-200/70 hover:text-base-content"
+									href={ renderer.ResolveBackURL(ctx, routes.{{.ResourceName}}Index.URL()) }
+								>Back to List</a>
+							</div>
+						</form>
+						<div role="separator" class="my-6 shrink-0 bg-base-300 h-px w-full"></div>
+						<form
+							hx-delete={ routes.{{.ResourceName}}Destroy.URL({{.ResourceName | ToLower}}.ID) }
+							hx-swap="none"
+							hx-on::after-request="if(event.detail.successful) { window.location.href = '" + routes.{{.ResourceName}}Index.URL() + "' }"
+							hx-confirm="Are you sure you want to delete this {{.ResourceName | ToLower}}?"
+						>
+							<button
+								type="submit"
+								class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-error text-error-content shadow-sm hover:bg-error/90 h-9 px-4 py-2 text-sm rounded-field w-full"
+							>Destroy {{.ResourceName}}</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</main>
+	}
+}

@@ -28,6 +28,9 @@ dependencies, and configuration.`,
 		StringP("css", "c", "", "CSS framework to use (tailwind, vanilla) (optional, default: tailwind)")
 
 	projectCmd.Flags().
+		StringP("hypermedia", "m", "", "Hypermedia framework to use (datastar, htmx, both) (optional, default: datastar)")
+
+	projectCmd.Flags().
 		StringSliceP("extensions", "e", nil, "Extensions to enable (comma-separated list)")
 
 	return projectCmd
@@ -77,11 +80,27 @@ func newProject(cmd *cobra.Command, args []string, version string) error {
 		)
 	}
 
+	hypermedia, err := cmd.Flags().GetString("hypermedia")
+	if err != nil {
+		return err
+	}
+
+	if hypermedia == "" {
+		hypermedia = "datastar"
+	}
+
+	if hypermedia != "datastar" && hypermedia != "htmx" && hypermedia != "both" {
+		return fmt.Errorf(
+			"invalid hypermedia framework provided: %s - valid options are 'datastar', 'htmx', and 'both'",
+			hypermedia,
+		)
+	}
+
 	extensions, err := cmd.Flags().GetStringSlice("extensions")
 	if err != nil {
 		return err
 	}
-	if err := layout.Scaffold(basePath, projectName, database, cssFramework, version, extensions); err != nil {
+	if err := layout.Scaffold(basePath, projectName, database, cssFramework, version, hypermedia, extensions); err != nil {
 		return err
 	}
 

@@ -181,7 +181,7 @@ func (g *Generator) buildViewField(col *catalog.Column) (ViewField, error) {
 	return field, nil
 }
 
-func (g *Generator) GenerateViewFile(view *GeneratedView, withController bool, cssFramework string) (string, error) {
+func (g *Generator) GenerateViewFile(view *GeneratedView, withController bool, cssFramework, hypermediaFramework string) (string, error) {
 	// Custom template functions for view-specific operations
 	customFuncs := template.FuncMap{
 		"FieldRef": func(field ViewField, resourceName string) string {
@@ -257,9 +257,15 @@ func (g *Generator) GenerateViewFile(view *GeneratedView, withController bool, c
 		templatePrefix = "vanilla_"
 	}
 
-	templateName := templatePrefix + "resource_view_no_controller.tmpl"
+	// Determine hypermedia template suffix based on hypermedia framework
+	hypermediaSuffix := ""
+	if hypermediaFramework == "htmx" {
+		hypermediaSuffix = "_htmx"
+	}
+
+	templateName := templatePrefix + "resource_view_no_controller" + hypermediaSuffix + ".tmpl"
 	if withController {
-		templateName = templatePrefix + "resource_view.tmpl"
+		templateName = templatePrefix + "resource_view" + hypermediaSuffix + ".tmpl"
 	}
 
 	// Use the unified template service with custom functions
@@ -294,11 +300,15 @@ func (g *Generator) GenerateViewWithController(
 		return fmt.Errorf("view file %s already exists", viewPath)
 	}
 
-	// Read CSS framework from andurel.lock (default to tailwind)
+	// Read CSS framework and hypermedia framework from andurel.lock (defaults to tailwind + datastar)
 	cssFramework := "tailwind"
+	hypermediaFramework := "datastar"
 	if rootDir, err := g.fileManager.FindGoModRoot(); err == nil {
 		if lock, err := layout.ReadLockFile(rootDir); err == nil && lock.ScaffoldConfig != nil {
 			cssFramework = lock.ScaffoldConfig.CSSFramework
+			if lock.ScaffoldConfig.HypermediaFramework != "" {
+				hypermediaFramework = lock.ScaffoldConfig.HypermediaFramework
+			}
 		}
 	}
 
@@ -312,7 +322,7 @@ func (g *Generator) GenerateViewWithController(
 		return fmt.Errorf("failed to build view: %w", err)
 	}
 
-	viewContent, err := g.GenerateViewFile(view, withController, cssFramework)
+	viewContent, err := g.GenerateViewFile(view, withController, cssFramework, hypermediaFramework)
 	if err != nil {
 		return fmt.Errorf("failed to render view file: %w", err)
 	}

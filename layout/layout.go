@@ -36,6 +36,7 @@ var (
 
 func Scaffold(
 	targetDir, projectName, database, cssFramework, version string,
+	hypermediaFramework string,
 	extensionNames []string,
 ) error {
 	fmt.Printf("Scaffolding new project in %s...\n", targetDir)
@@ -48,6 +49,7 @@ func Scaffold(
 		ModuleName:           moduleName,
 		Database:             database,
 		CSSFramework:         cssFramework,
+		HypermediaFramework:  hypermediaFramework,
 		GoVersion:            goVersion,
 		SessionKey:           generateRandomHex(64),
 		SessionEncryptionKey: generateRandomHex(32),
