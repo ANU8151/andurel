@@ -2,7 +2,8 @@ package views
 
 import (
 	"fmt"
-	"strings"
+	"net/http"
+	"testapp/internal/hypermedia"
 	"testapp/models"
 )
 
@@ -100,20 +101,22 @@ templ CategoryNew() {
 						<p class="text-sm text-base-content/60">Enter the details for the new category.</p>
 					</div>
 					<div class="p-6 pt-0">
-						<form class="space-y-5" data-indicator:submitting data-on:submit={ "!$submitting && " + fmt.Sprintf("@post('%s')", "/") }>
+						<form class="space-y-5" data-indicator:submitting { hypermedia.Action(ctx, http.MethodPost, "/")... }>
 							<fieldset data-attr:disabled="$submitting">
 								<div class="space-y-4">
 									<div class="space-y-1">
 										<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for="name">Name</label>
-										<input type="text" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="name"/>
+										<input type="text" name="name" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="name"/>
 									</div>
 									<div class="space-y-1">
 										<label class="text-sm font-medium leading-none text-base-content/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-60" for="description">Description</label>
-										<input type="text" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="description"/>
+										<input type="text" name="description" class="flex h-9 w-full rounded-field border bg-base-200 px-3 py-1 text-sm text-base-content shadow-inner transition placeholder:text-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 border-base-300" data-bind="description"/>
 									</div>
 								</div>
 								<div class="mt-6 space-y-3">
-									<button type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field w-full">Create Category</button>
+									<button type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-content shadow-sm hover:bg-primary/90 h-9 px-4 py-2 text-sm rounded-field w-full htmx-indicator">
+										<span class="htmx-spinner" data-show="$submitting">Create Category</span>
+									</button>
 									<a class="inline-flex h-9 w-full items-center justify-center rounded-field border border-base-300 px-4 py-2 text-sm font-medium text-base-content/80 transition hover:bg-base-200/70 hover:text-base-content" href="/">Back to List</a>
 								</div>
 							</fieldset>
@@ -154,7 +157,7 @@ templ CategoryEdit(category models.Category) {
 							</fieldset>
 						</form>
 						<div role="separator" class="my-6 shrink-0 bg-base-300 h-px w-full"></div>
-						<button type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-error text-error-content shadow-sm hover:bg-error/90 h-9 px-4 py-2 text-sm rounded-field w-full" data-on:click={ fmt.Sprintf("@delete('%s')", "/") }>Destroy Category</button>
+						<button type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60 disabled:cursor-not-allowed bg-error text-error-content shadow-sm hover:bg-error/90 h-9 px-4 py-2 text-sm rounded-field w-full" { hypermedia.Action(ctx, http.MethodDelete, "/")... }>Destroy Category</button>
 					</div>
 				</div>
 			</div>

@@ -2,7 +2,9 @@ package views
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
+	"testapp/internal/hypermedia"
 	"testapp/models"
 )
 
@@ -133,39 +135,41 @@ templ DocumentNew() {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting && " + fmt.Sprintf("@post('%s')", "/") }
+							{ hypermedia.Action(ctx, http.MethodPost, "/")... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
 									<label class="field-label" for="title">Title</label>
 									<div class="field-control">
-										<input class="input" id="title" type="text" data-bind="title"/>
+										<input class="input" id="title" type="text" name="title" data-bind="title"/>
 									</div>
 								</div>
 								<div class="field">
 									<label class="field-label" for="tags">Tags</label>
 									<div class="field-control">
-										<input class="input" id="tags" type="text" data-bind="tags"/>
+										<input class="input" id="tags" type="text" name="tags" data-bind="tags"/>
 									</div>
 								</div>
 								<div class="field">
 									<label class="field-label" for="pageNumbers">Page Numbers</label>
 									<div class="field-control">
-										<input class="input" id="pageNumbers" type="text" data-bind="pageNumbers"/>
+										<input class="input" id="pageNumbers" type="text" name="pageNumbers" data-bind="pageNumbers"/>
 									</div>
 								</div>
 								<div class="field">
 									<label class="field-label" for="viewCount">View Count</label>
 									<div class="field-control">
-										<input class="input" id="viewCount" type="number" data-bind="viewCount"/>
+										<input class="input" id="viewCount" type="number" name="viewCount" data-bind="viewCount"/>
 									</div>
 								</div>
 								<div class="radio-row">
-									<input class="checkbox" id="isPublished" type="checkbox" data-bind="isPublished"/>
+									<input class="checkbox" id="isPublished" type="checkbox" name="isPublished" data-bind="isPublished"/>
 									<label class="label" for="isPublished">Is Published</label>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Create Document</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Create Document</span>
+									</button>
 									<a class="btn btn-outline btn-block" href="/">Back to List</a>
 								</div>
 							</fieldset>
@@ -190,41 +194,43 @@ templ DocumentEdit(document models.Document) {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting && " + fmt.Sprintf("@put('%s')", "/") }
+							{ hypermedia.Action(ctx, http.MethodPut, "/")... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
 									<label class="field-label" for="title">Title</label>
 									<div class="field-control">
-										<input class="input" id="title" type="text" data-bind="title" value={ document.Title }/>
+										<input class="input" id="title" type="text" name="title" data-bind="title" value={ document.Title }/>
 									</div>
 								</div>
 								<div class="field">
 									<label class="field-label" for="tags">Tags</label>
 									<div class="field-control">
-										<input class="input" id="tags" type="text" data-bind="tags" value={ strings.Join(document.Tags, ", ") }/>
+										<input class="input" id="tags" type="text" name="tags" data-bind="tags" value={ strings.Join(document.Tags, ", ") }/>
 									</div>
 								</div>
 								<div class="field">
 									<label class="field-label" for="pageNumbers">Page Numbers</label>
 									<div class="field-control">
-										<input class="input" id="pageNumbers" type="text" data-bind="pageNumbers" value={ fmt.Sprintf("%v", document.PageNumbers) }/>
+										<input class="input" id="pageNumbers" type="text" name="pageNumbers" data-bind="pageNumbers" value={ fmt.Sprintf("%v", document.PageNumbers) }/>
 									</div>
 								</div>
 								<div class="field">
 									<label class="field-label" for="viewCount">View Count</label>
 									<div class="field-control">
-										<input class="input" id="viewCount" type="number" data-bind="viewCount" value={ fmt.Sprintf("%d", document.ViewCount) }/>
+										<input class="input" id="viewCount" type="number" name="viewCount" data-bind="viewCount" value={ fmt.Sprintf("%d", document.ViewCount) }/>
 									</div>
 								</div>
 								<div class="radio-row">
-									<input class="checkbox" id="isPublished" type="checkbox" data-bind="isPublished" if document.IsPublished {
+									<input class="checkbox" id="isPublished" type="checkbox" name="isPublished" data-bind="isPublished" if document.IsPublished {
 	checked
 }/>
 									<label class="label" for="isPublished">Is Published</label>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Update Document</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Update Document</span>
+									</button>
 									<a class="btn btn-outline btn-block" href="/">Back to List</a>
 								</div>
 							</fieldset>
@@ -234,7 +240,7 @@ templ DocumentEdit(document models.Document) {
 						<button
 							class="btn btn-destructive btn-block"
 							type="button"
-							data-on:click={ fmt.Sprintf("@delete('%s')", "/") }
+							{ hypermedia.Action(ctx, http.MethodDelete, "/")... }
 						>Destroy Document</button>
 					</div>
 				</div>

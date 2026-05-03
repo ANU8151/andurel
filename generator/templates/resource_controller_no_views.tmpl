@@ -21,6 +21,7 @@ import (
 	"{{.ModulePath}}/router/cookies"
 	"{{.ModulePath}}/router/routes"
 	"{{.ModulePath}}/views"
+	"{{.ModulePath}}/internal/hypermedia"
 )
 
 type {{.PluralResourceName}} struct {
@@ -172,14 +173,16 @@ func ({{.ReceiverName}} {{.PluralResourceName}}) Create(etx *echo.Context) error
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to create {{.ResourceName | ToLowerCamelCase}}: %v", err)); flashErr != nil {
 			return flashErr
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.{{.ResourceName}}New.URL())
+		return hypermedia.Redirect(etx, routes.{{.ResourceName}}New.URL())
+
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "{{.ResourceName}} created successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.{{.ResourceName}}Show.URL({{.ResourceName | ToLowerCamelCase}}.ID))
+	return hypermedia.Redirect(etx, routes.{{.ResourceName}}Show.URL({{.ResourceName | ToLowerCamelCase}}.ID))
+
 }
 
 func ({{.ReceiverName}} {{.PluralResourceName}}) Edit(etx *echo.Context) error {
@@ -314,17 +317,16 @@ func ({{.ReceiverName}} {{.PluralResourceName}}) Update(etx *echo.Context) error
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to update {{.ResourceName | ToLowerCamelCase}}: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(
-			http.StatusSeeOther,
-			routes.{{.ResourceName}}Edit.URL({{.ResourceName | ToLowerCamelCase}}ID),
-		)
+		return hypermedia.Redirect(etx, routes.{{.ResourceName}}Edit.URL({{.ResourceName | ToLowerCamelCase}}ID))
+
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "{{.ResourceName}} updated successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.{{.ResourceName}}Show.URL({{.ResourceName | ToLowerCamelCase}}.ID))
+	return hypermedia.Redirect(etx, routes.{{.ResourceName}}Show.URL({{.ResourceName | ToLowerCamelCase}}.ID))
+
 }
 
 func ({{.ReceiverName}} {{.PluralResourceName}}) Destroy(etx *echo.Context) error {
@@ -356,12 +358,14 @@ func ({{.ReceiverName}} {{.PluralResourceName}}) Destroy(etx *echo.Context) erro
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to delete {{.ResourceName | ToLowerCamelCase}}: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.{{.ResourceName}}Index.URL())
+		return hypermedia.Redirect(etx, routes.{{.ResourceName}}Index.URL())
+
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "{{.ResourceName}} destroyed successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.{{.ResourceName}}Index.URL())
+	return hypermedia.Redirect(etx, routes.{{.ResourceName}}Index.URL())
+
 }

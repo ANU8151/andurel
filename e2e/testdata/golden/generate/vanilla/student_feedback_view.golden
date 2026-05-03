@@ -124,7 +124,7 @@ templ StudentFeedbackNew() {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPost, routes.StudentFeedbackCreate.URL()) }
+							{ hypermedia.Action(ctx, http.MethodPost, routes.StudentFeedbackCreate.URL())... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -146,7 +146,9 @@ templ StudentFeedbackNew() {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Create StudentFeedback</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Create StudentFeedback</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.StudentFeedbackIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -171,7 +173,7 @@ templ StudentFeedbackEdit(studentfeedback models.StudentFeedback) {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPut, routes.StudentFeedbackUpdate.URL(studentfeedback.ID)) }
+							{ hypermedia.Action(ctx, http.MethodPut, routes.StudentFeedbackUpdate.URL(studentfeedback.ID))... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -193,7 +195,9 @@ templ StudentFeedbackEdit(studentfeedback models.StudentFeedback) {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Update StudentFeedback</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Update StudentFeedback</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.StudentFeedbackIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -203,7 +207,7 @@ templ StudentFeedbackEdit(studentfeedback models.StudentFeedback) {
 						<button
 							class="btn btn-destructive btn-block"
 							type="button"
-							data-on:click={ hypermedia.DataAction(http.MethodDelete, routes.StudentFeedbackDestroy.URL(studentfeedback.ID)) }
+							{ hypermedia.Action(ctx, http.MethodDelete, routes.StudentFeedbackDestroy.URL(studentfeedback.ID))... }
 						>Destroy StudentFeedback</button>
 					</div>
 				</div>

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"testapp/internal/hypermedia"
 	"testapp/internal/storage"
 	"testapp/models"
 	"testapp/router/cookies"
@@ -106,14 +107,16 @@ func (i Invoices) Create(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to create invoice: %v", err)); flashErr != nil {
 			return flashErr
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.InvoiceNew.URL())
+		return hypermedia.Redirect(etx, routes.InvoiceNew.URL())
+
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "Invoice created successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.InvoiceShow.URL(invoice.ID))
+	return hypermedia.Redirect(etx, routes.InvoiceShow.URL(invoice.ID))
+
 }
 
 func (i Invoices) Edit(etx *echo.Context) error {
@@ -172,17 +175,16 @@ func (i Invoices) Update(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to update invoice: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(
-			http.StatusSeeOther,
-			routes.InvoiceEdit.URL(invoiceID),
-		)
+		return hypermedia.Redirect(etx, routes.InvoiceEdit.URL(invoiceID))
+
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "Invoice updated successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.InvoiceShow.URL(invoice.ID))
+	return hypermedia.Redirect(etx, routes.InvoiceShow.URL(invoice.ID))
+
 }
 
 func (i Invoices) Destroy(etx *echo.Context) error {
@@ -196,12 +198,14 @@ func (i Invoices) Destroy(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to delete invoice: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.InvoiceIndex.URL())
+		return hypermedia.Redirect(etx, routes.InvoiceIndex.URL())
+
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "Invoice destroyed successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.InvoiceIndex.URL())
+	return hypermedia.Redirect(etx, routes.InvoiceIndex.URL())
+
 }

@@ -3,9 +3,39 @@
 package hypermedia
 
 import (
+	"context"
 	"fmt"
 	"strings"
+
+	"github.com/a-h/templ"
 )
+
+func Action(ctx context.Context, method, route string, options ...DataActionOption) templ.Attributes {
+	isHTMX, _ := ctx.Value("isHTMX").(bool)
+	if isHTMX {
+		attr := templ.Attributes{
+			fmt.Sprintf("hx-%s", strings.ToLower(method)): route,
+		}
+
+		// Handle some common options for HTMX
+		for _, opt := range options {
+			pos, val := opt()
+			if pos == "append" {
+				if val == "form" {
+					// HTMX forms include data by default
+				} else if strings.HasPrefix(val, "headers:") {
+					// parse and add hx-headers if needed
+				}
+			}
+		}
+		return attr
+	}
+
+	// Default to Datastar
+	return templ.Attributes{
+		"data-on:click": DataAction(method, route, options...),
+	}
+}
 
 type DataActionOption func() (string, string)
 

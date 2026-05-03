@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"log/slog"
-	"net/http"
 
 	"{{.ModuleName}}/config"
 	"{{.ModuleName}}/internal/storage"
@@ -74,7 +73,8 @@ func (r Registrations) Create(etx *echo.Context) error {
 			return render(etx, views.InternalError())
 		}
 
-		return etx.Redirect(http.StatusSeeOther, routes.RegistrationNew.URL())
+		return hypermedia.Redirect(etx, 
+ routes.RegistrationNew.URL())
 	}
 
 	return hypermedia.Redirect(etx, routes.ConfirmationNew.URL())

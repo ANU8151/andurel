@@ -124,7 +124,7 @@ templ ItemNew() {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPost, routes.ItemCreate.URL()) }
+							{ hypermedia.Action(ctx, http.MethodPost, routes.ItemCreate.URL())... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -146,7 +146,9 @@ templ ItemNew() {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Create Item</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Create Item</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.ItemIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -171,7 +173,7 @@ templ ItemEdit(item models.Item) {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPut, routes.ItemUpdate.URL(item.ID)) }
+							{ hypermedia.Action(ctx, http.MethodPut, routes.ItemUpdate.URL(item.ID))... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -193,7 +195,9 @@ templ ItemEdit(item models.Item) {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Update Item</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Update Item</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.ItemIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -203,7 +207,7 @@ templ ItemEdit(item models.Item) {
 						<button
 							class="btn btn-destructive btn-block"
 							type="button"
-							data-on:click={ hypermedia.DataAction(http.MethodDelete, routes.ItemDestroy.URL(item.ID)) }
+							{ hypermedia.Action(ctx, http.MethodDelete, routes.ItemDestroy.URL(item.ID))... }
 						>Destroy Item</button>
 					</div>
 				</div>

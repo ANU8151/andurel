@@ -1,27 +1,38 @@
 package views
 
 import (
+	"{{.ModuleName}}/internal/renderer"
 	"{{.ModuleName}}/router/cookies"
 	"{{.ModuleName}}/views/components"
 	"time"
 )
 
 templ base(headOpts ...HeadDataOption) {
-	<!DOCTYPE html>
-	<html lang="en" class="dark">
-		@SetupHead(ctx, headOpts...)
-		<body class="min-h-screen flex flex-col bg-base-200 text-base-content">
-			{ children... }
-			<footer>
-				<div class="container mx-auto py-4 text-center text-sm text-base-content/50">
-					&copy; { time.Now().Format("2006") } andurel.
+	if renderer.IsHypermedia(ctx) {
+		{ children... }
+	} else {
+		<!DOCTYPE html>
+		<html lang="en" class="dark">
+			@SetupHead(ctx, headOpts...)
+			<body 
+				class="min-h-screen flex flex-col bg-base-200 text-base-content"
+				{{if or (eq .HypermediaFramework "htmx") (eq .HypermediaFramework "both")}}
+				hx-ext="sse"
+				sse-connect="/sse"
+				{{end}}
+			>
+				{ children... }
+				<footer>
+					<div class="container mx-auto py-4 text-center text-sm text-base-content/50">
+						&copy; { time.Now().Format("2006") } andurel.
+					</div>
+				</footer>
+				<div id="flashContainer" class="toast-stack">
+					for _, flash := range cookies.GetFlashesCtx(ctx) {
+						@components.ToastMessage(flash)
+					}
 				</div>
-			</footer>
-			<div id="flashContainer" class="toast-stack">
-				for _, flash := range cookies.GetFlashesCtx(ctx) {
-					@components.ToastMessage(flash)
-				}
-			</div>
-		</body>
-	</html>
+			</body>
+		</html>
+	}
 }

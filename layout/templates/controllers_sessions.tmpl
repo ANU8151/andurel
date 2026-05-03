@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"log/slog"
-	"net/http"
 
 	"{{.ModuleName}}/config"
 	"{{.ModuleName}}/internal/storage"
@@ -76,7 +75,8 @@ func (s Sessions) Create(etx *echo.Context) error {
 			return render(etx, views.InternalError())
 		}
 
-		return etx.Redirect(http.StatusSeeOther, routes.SessionNew.URL())
+		return hypermedia.Redirect(etx, 
+ routes.SessionNew.URL())
 	}
 
 	if err := cookies.CreateAppSession(etx, user); err != nil {
@@ -112,5 +112,6 @@ func (s Sessions) Destroy(etx *echo.Context) error {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.SessionNew.URL())
+	return hypermedia.Redirect(etx, 
+ routes.SessionNew.URL())
 }

@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strconv"
+	"testapp/internal/hypermedia"
 	"testapp/internal/storage"
 	"testapp/models"
 	"testapp/router/cookies"
@@ -104,14 +104,14 @@ func (sf StudentFeedback) Create(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to create studentFeedback: %v", err)); flashErr != nil {
 			return flashErr
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.StudentFeedbackNew.URL())
+		return hypermedia.Redirect(etx, routes.StudentFeedbackNew.URL())
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "StudentFeedback created successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.StudentFeedbackShow.URL(studentFeedback.ID))
+	return hypermedia.Redirect(etx, routes.StudentFeedbackShow.URL(studentFeedback.ID))
 }
 
 func (sf StudentFeedback) Edit(etx *echo.Context) error {
@@ -168,17 +168,14 @@ func (sf StudentFeedback) Update(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to update studentFeedback: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(
-			http.StatusSeeOther,
-			routes.StudentFeedbackEdit.URL(studentFeedbackID),
-		)
+		return hypermedia.Redirect(etx, routes.StudentFeedbackEdit.URL(studentFeedbackID))
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "StudentFeedback updated successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.StudentFeedbackShow.URL(studentFeedback.ID))
+	return hypermedia.Redirect(etx, routes.StudentFeedbackShow.URL(studentFeedback.ID))
 }
 
 func (sf StudentFeedback) Destroy(etx *echo.Context) error {
@@ -192,12 +189,12 @@ func (sf StudentFeedback) Destroy(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to delete studentFeedback: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.StudentFeedbackIndex.URL())
+		return hypermedia.Redirect(etx, routes.StudentFeedbackIndex.URL())
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "StudentFeedback destroyed successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.StudentFeedbackIndex.URL())
+	return hypermedia.Redirect(etx, routes.StudentFeedbackIndex.URL())
 }

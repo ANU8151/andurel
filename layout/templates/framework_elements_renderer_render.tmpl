@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"{{.ModuleName}}/internal/hypermedia"
+
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v5"
 )
@@ -20,6 +22,14 @@ func Render(ctx *echo.Context, t templ.Component, cookieKeys []CookieKey) error 
 	defer templ.ReleaseBuffer(buf)
 
 	extendedCtx := ctx.Request().Context()
+
+	// Add Hypermedia detection
+	isHypermedia := hypermedia.IsHypermedia(ctx)
+	isHTMX := hypermedia.IsHTMX(ctx)
+	isDatastar := hypermedia.IsDatastar(ctx)
+	extendedCtx = context.WithValue(extendedCtx, "isHypermedia", isHypermedia)
+	extendedCtx = context.WithValue(extendedCtx, "isHTMX", isHTMX)
+	extendedCtx = context.WithValue(extendedCtx, "isDatastar", isDatastar)
 
 	for _, cookie := range cookieKeys {
 		cookieCtx := ctx.Get(string(cookie))
@@ -37,6 +47,11 @@ func Render(ctx *echo.Context, t templ.Component, cookieKeys []CookieKey) error 
 	}
 
 	return ctx.HTML(http.StatusOK, buf.String())
+}
+
+func IsHypermedia(ctx context.Context) bool {
+	isHypermedia, _ := ctx.Value("isHypermedia").(bool)
+	return isHypermedia
 }
 
 func ResolveBackURL(ctx context.Context, fallback string) string {

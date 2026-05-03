@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strconv"
+	"testapp/internal/hypermedia"
 	"testapp/internal/storage"
 	"testapp/models"
 	"testapp/router/cookies"
@@ -122,14 +122,14 @@ func (o Orders) Create(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to create order: %v", err)); flashErr != nil {
 			return flashErr
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.OrderNew.URL())
+		return hypermedia.Redirect(etx, routes.OrderNew.URL())
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "Order created successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.OrderShow.URL(order.ID))
+	return hypermedia.Redirect(etx, routes.OrderShow.URL(order.ID))
 }
 
 func (o Orders) Edit(etx *echo.Context) error {
@@ -204,17 +204,14 @@ func (o Orders) Update(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to update order: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(
-			http.StatusSeeOther,
-			routes.OrderEdit.URL(orderID),
-		)
+		return hypermedia.Redirect(etx, routes.OrderEdit.URL(orderID))
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "Order updated successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.OrderShow.URL(order.ID))
+	return hypermedia.Redirect(etx, routes.OrderShow.URL(order.ID))
 }
 
 func (o Orders) Destroy(etx *echo.Context) error {
@@ -228,12 +225,12 @@ func (o Orders) Destroy(etx *echo.Context) error {
 		if flashErr := cookies.AddFlash(etx, cookies.FlashError, fmt.Sprintf("Failed to delete order: %v", err)); flashErr != nil {
 			return render(etx, views.InternalError())
 		}
-		return etx.Redirect(http.StatusSeeOther, routes.OrderIndex.URL())
+		return hypermedia.Redirect(etx, routes.OrderIndex.URL())
 	}
 
 	if flashErr := cookies.AddFlash(etx, cookies.FlashSuccess, "Order destroyed successfully"); flashErr != nil {
 		return render(etx, views.InternalError())
 	}
 
-	return etx.Redirect(http.StatusSeeOther, routes.OrderIndex.URL())
+	return hypermedia.Redirect(etx, routes.OrderIndex.URL())
 }

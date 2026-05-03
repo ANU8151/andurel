@@ -257,15 +257,9 @@ func (g *Generator) GenerateViewFile(view *GeneratedView, withController bool, c
 		templatePrefix = "vanilla_"
 	}
 
-	// Determine hypermedia template suffix based on hypermedia framework
-	hypermediaSuffix := ""
-	if hypermediaFramework == "htmx" {
-		hypermediaSuffix = "_htmx"
-	}
-
-	templateName := templatePrefix + "resource_view_no_controller" + hypermediaSuffix + ".tmpl"
+	templateName := templatePrefix + "resource_view_no_controller.tmpl"
 	if withController {
-		templateName = templatePrefix + "resource_view" + hypermediaSuffix + ".tmpl"
+		templateName = templatePrefix + "resource_view.tmpl"
 	}
 
 	// Use the unified template service with custom functions

@@ -25,6 +25,9 @@ move:
 scaf-psql:
 	cd ../ && ./andurel-dev new myp-psql && mv ./andurel-dev ./myp-psql && cd ./myp-psql && cp .env.example .env && just new-migration users
 
+scaf-htmx:
+	cd ../ && ./andurel-dev new myp-htmx --hypermedia htmx && mv ./andurel-dev ./myp-htmx && cd ./myp-htmx && cp .env.example .env && just new-migration users
+
 full-psql:
 	just build
 	just move
@@ -64,6 +67,11 @@ test-e2e-full:
 test-e2e-scaffold:
 	go clean -testcache
 	go test ./e2e -run TestScaffoldMatrix -v -timeout 30m
+
+# Run specific e2e test suite - HTMX scaffold
+test-e2e-htmx:
+	go clean -testcache
+	go test -v ./e2e -run TestScaffoldMatrix/postgresql-tailwind-htmx -timeout 10m
 
 # Run specific e2e test suite - generate command tests
 test-e2e-generate:

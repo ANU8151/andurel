@@ -124,7 +124,7 @@ templ ReviewNew() {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPost, routes.ReviewCreate.URL()) }
+							{ hypermedia.Action(ctx, http.MethodPost, routes.ReviewCreate.URL())... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -146,7 +146,9 @@ templ ReviewNew() {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Create Review</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Create Review</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.ReviewIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -171,7 +173,7 @@ templ ReviewEdit(review models.Review) {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPut, routes.ReviewUpdate.URL(review.ID)) }
+							{ hypermedia.Action(ctx, http.MethodPut, routes.ReviewUpdate.URL(review.ID))... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -193,7 +195,9 @@ templ ReviewEdit(review models.Review) {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Update Review</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Update Review</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.ReviewIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -203,7 +207,7 @@ templ ReviewEdit(review models.Review) {
 						<button
 							class="btn btn-destructive btn-block"
 							type="button"
-							data-on:click={ hypermedia.DataAction(http.MethodDelete, routes.ReviewDestroy.URL(review.ID)) }
+							{ hypermedia.Action(ctx, http.MethodDelete, routes.ReviewDestroy.URL(review.ID))... }
 						>Destroy Review</button>
 					</div>
 				</div>

@@ -10,6 +10,7 @@ type ScaffoldConfig struct {
 	Name       string
 	Database   string
 	CSS        string
+	Hypermedia string
 	Extensions []string
 	Critical   bool
 }
@@ -42,6 +43,13 @@ func getScaffoldConfigs() []ScaffoldConfig {
 			Extensions: []string{"aws-ses"},
 			Critical:   true,
 		},
+		{
+			Name:       "postgresql-tailwind-htmx",
+			Database:   "postgresql",
+			CSS:        "tailwind",
+			Hypermedia: "htmx",
+			Critical:   true,
+		},
 	}
 }
 
@@ -66,6 +74,10 @@ func TestScaffoldMatrix(t *testing.T) {
 
 			args := []string{
 				"-c", config.CSS,
+			}
+
+			if config.Hypermedia != "" {
+				args = append(args, "-m", config.Hypermedia)
 			}
 
 			if len(config.Extensions) > 0 {
@@ -133,6 +145,10 @@ func verifyScaffoldedProject(t *testing.T, project *internal.Project, config Sca
 		internal.AssertFilesExist(t, project, vanillaCSSFiles)
 		internal.AssertFileContains(t, project, "router/routes/assets.go", `"/css/*"`)
 		internal.AssertFileContains(t, project, "controllers/assets.go", `etx.Param("*")`)
+	}
+
+	if config.Hypermedia == "htmx" {
+		internal.AssertFileContains(t, project, "assets/js/scripts.js", "htmx.org")
 	}
 
 	// Auth is now part of base scaffold, verify auth files always exist

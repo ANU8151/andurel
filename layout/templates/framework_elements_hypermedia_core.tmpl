@@ -187,6 +187,13 @@ func WithRetryDuration(retryDuration time.Duration) PatchElementOption {
 }
 
 func ExecuteScript(c *echo.Context, scriptContents string, opts ...ExecuteScriptOption) error {
+	// HTMX AJAX support
+	if IsHTMX(c) && !IsDatastar(c) {
+		c.Response().Header().Set("Content-Type", "text/html")
+		return c.HTML(http.StatusOK, fmt.Sprintf("<script>%s</script>", scriptContents))
+	}
+
+	// SSE / Datastar support
 	c.Response().Header().Set("Cache-Control", "no-cache")
 	c.Response().Header().Set("Content-Type", "text/event-stream")
 
@@ -261,19 +268,71 @@ func ExecuteScript(c *echo.Context, scriptContents string, opts ...ExecuteScript
 //		call := fmt.Sprintf("console.error(%q)", err.Error())
 //		return ExecuteScript(c, call, opts...)
 //	}
+func IsHTMX(c *echo.Context) bool {
+	return c.Request().Header.Get("HX-Request") == "true"
+}
+
+func IsDatastar(c *echo.Context) bool {
+	return strings.Contains(c.Request().Header.Get("Accept"), "text/event-stream")
+}
+
+func IsHypermedia(c *echo.Context) bool {
+	return IsHTMX(c) || IsDatastar(c)
+}
+
 func Redirectf(c *echo.Context, format string, args ...any) error {
 	url := fmt.Sprintf(format, args...)
 	return Redirect(c, url)
 }
 
 func Redirect(c *echo.Context, url string, opts ...ExecuteScriptOption) error {
-	js := fmt.Sprintf("setTimeout(() => window.location.href = %q)", url)
-	return ExecuteScript(c, js, opts...)
+	// HTMX support
+	if IsHTMX(c) {
+		c.Response().Header().Set("HX-Redirect", url)
+		return nil
+	}
+
+	// Datastar support
+	if IsDatastar(c) {
+		js := fmt.Sprintf("setTimeout(() => window.location.href = %q)", url)
+		return ExecuteScript(c, js, opts...)
+	}
+
+	// Standard fallback
+	return c.Redirect(http.StatusSeeOther, url)
+}
+
+func Refresh(c *echo.Context) error {
+	if IsHTMX(c) {
+		c.Response().Header().Set("HX-Refresh", "true")
+		return nil
+	}
+	return Redirect(c, c.Request().URL.String())
+}
+
+func Trigger(c *echo.Context, event string) {
+	c.Response().Header().Set("HX-Trigger", event)
+}
+
+func Reswap(c *echo.Context, swap string) {
+	c.Response().Header().Set("HX-Reswap", swap)
+}
+
+func Retarget(c *echo.Context, target string) {
+	c.Response().Header().Set("HX-Retarget", target)
 }
 
 func ReplaceURL(c *echo.Context, u url.URL, opts ...ExecuteScriptOption) error {
+	if IsHTMX(c) {
+		c.Response().Header().Set("HX-Replace-URL", u.String())
+		return nil
+	}
 	js := fmt.Sprintf(`window.history.replaceState({}, "", %q)`, u.String())
 	return ExecuteScript(c, js, opts...)
+}
+
+func PushURL(c *echo.Context, u url.URL) {
+	c.Response().Header().Set("HX-Push-URL", u.String())
 }
 
 func ReplaceURLQuery(

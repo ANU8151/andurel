@@ -130,7 +130,7 @@ templ OrderNew() {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPost, routes.OrderCreate.URL()) }
+							{ hypermedia.Action(ctx, http.MethodPost, routes.OrderCreate.URL())... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -158,7 +158,9 @@ templ OrderNew() {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Create Order</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Create Order</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.OrderIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -183,7 +185,7 @@ templ OrderEdit(order models.Order) {
 						<form
 							class="form"
 							data-indicator:submitting
-							data-on:submit={ "!$submitting &&" + hypermedia.DataAction(http.MethodPut, routes.OrderUpdate.URL(order.ID)) }
+							{ hypermedia.Action(ctx, http.MethodPut, routes.OrderUpdate.URL(order.ID))... }
 						>
 							<fieldset class="fieldset" data-attr:disabled="$submitting">
 								<div class="field">
@@ -211,7 +213,9 @@ templ OrderEdit(order models.Order) {
 									</div>
 								</div>
 								<div class="stack" data-gap="sm">
-									<button class="btn btn-primary btn-block" type="submit">Update Order</button>
+									<button class="btn btn-primary btn-block htmx-indicator" type="submit">
+										<span class="htmx-spinner" data-show="$submitting">Update Order</span>
+									</button>
 									<a class="btn btn-outline btn-block" href={ renderer.ResolveBackURL(ctx, routes.OrderIndex.URL()) }>Back to List</a>
 								</div>
 							</fieldset>
@@ -221,7 +225,7 @@ templ OrderEdit(order models.Order) {
 						<button
 							class="btn btn-destructive btn-block"
 							type="button"
-							data-on:click={ hypermedia.DataAction(http.MethodDelete, routes.OrderDestroy.URL(order.ID)) }
+							{ hypermedia.Action(ctx, http.MethodDelete, routes.OrderDestroy.URL(order.ID))... }
 						>Destroy Order</button>
 					</div>
 				</div>

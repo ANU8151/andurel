@@ -6,6 +6,34 @@ import "./datastar_1-0-0-rc6.min.js"
 {{end}}
 
 {{if or (eq .HypermediaFramework "htmx") (eq .HypermediaFramework "both")}}
-// HTMX is loaded via CDN for simplicity
-// For production, consider self-hosting: https://htmx.org/docs/#installing
+import "https://unpkg.com/htmx.org@2.0.0"
+import "https://unpkg.com/htmx-ext-sse@2.2.1/sse.js"
+
+// Andurel Hypermedia Bridge: Enables HTMX to handle unified SSE events
+document.body.addEventListener('htmx:sseMessage', (e) => {
+	const type = e.detail.type;
+	if (type === 'datastar-patch-elements') {
+		const lines = e.detail.data.split('\n');
+		let selector = 'body';
+		let mode = 'outer';
+		let elements = '';
+		
+		lines.forEach(line => {
+			if (line.startsWith('selector ')) selector = line.substring(9);
+			if (line.startsWith('mode ')) mode = line.substring(5);
+			if (line.startsWith('elements ')) elements += line.substring(9) + '\n';
+		});
+
+		const target = document.querySelector(selector);
+		if (target && elements) {
+			if (mode === 'outer') target.outerHTML = elements;
+			else if (mode === 'inner') target.innerHTML = elements;
+			else if (mode === 'prepend') target.insertAdjacentHTML('afterbegin', elements);
+			else if (mode === 'append') target.insertAdjacentHTML('beforeend', elements);
+			
+			// Re-process the new content with HTMX
+			if (window.htmx) htmx.process(document.body);
+		}
+	}
+});
 {{end}}

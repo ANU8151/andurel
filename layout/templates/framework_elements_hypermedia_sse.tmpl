@@ -16,6 +16,16 @@ import (
 )
 
 func PatchElements(c *echo.Context, elements string, opts ...PatchElementOption) error {
+	// HTMX AJAX support (not SSE)
+	if IsHTMX(c) && !IsDatastar(c) {
+		c.Response().Header().Set("Content-Type", "text/html")
+		// If a selector is provided via options, we might need to wrap it or use hx-target
+		// But for simple parity, we'll just return the elements.
+		// HTMX handles OOB swaps if the elements have hx-swap-oob="true".
+		return c.HTML(http.StatusOK, elements)
+	}
+
+	// SSE / Datastar support
 	c.Response().Header().Set("Cache-Control", "no-cache")
 	c.Response().Header().Set("Content-Type", "text/event-stream")
 
@@ -256,35 +266,41 @@ func MergeSignals(c *echo.Context, signals map[string]any) error {
 	return nil
 }
 
-func ReadSignals(r *http.Request, signals any) error {
-	var dsInput []byte
+func ReadSignals(c *echo.Context, signals any) error {
+	// If it's a Datastar request, use its custom signal parsing
+	if IsDatastar(c) {
+		var dsInput []byte
+		r := c.Request()
 
-	if r.Method == "GET" {
-		dsJSON := r.URL.Query().Get(DatastarKey)
-		if dsJSON == "" {
-			return nil
-		}
-		dsInput = []byte(dsJSON)
-	}
-	if r.Method != "GET" {
-		buf := bytebufferpool.Get()
-		defer bytebufferpool.Put(buf)
-		if _, err := buf.ReadFrom(r.Body); err != nil {
-			if err == http.ErrBodyReadAfterClose {
-				return fmt.Errorf(
-					"body already closed, are you sure you created the SSE ***AFTER*** the ReadSignals? %w",
-					err,
-				)
+		if r.Method == "GET" {
+			dsJSON := r.URL.Query().Get(DatastarKey)
+			if dsJSON == "" {
+				return nil
 			}
-			return fmt.Errorf("failed to read body: %w", err)
+			dsInput = []byte(dsJSON)
+		} else {
+			buf := bytebufferpool.Get()
+			defer bytebufferpool.Put(buf)
+			if _, err := buf.ReadFrom(r.Body); err != nil {
+				if err == http.ErrBodyReadAfterClose {
+					return fmt.Errorf(
+						"body already closed, are you sure you created the SSE ***AFTER*** the ReadSignals? %w",
+						err,
+					)
+				}
+				return fmt.Errorf("failed to read body: %w", err)
+			}
+			dsInput = buf.Bytes()
 		}
-		dsInput = buf.Bytes()
+
+		if err := json.Unmarshal(dsInput, signals); err != nil {
+			return fmt.Errorf("failed to unmarshal datastar signals: %w", err)
+		}
+		return nil
 	}
 
-	if err := json.Unmarshal(dsInput, signals); err != nil {
-		return fmt.Errorf("failed to unmarshal: %w", err)
-	}
-	return nil
+	// For HTMX or standard forms, use standard binding
+	return c.Bind(signals)
 }
 
 func Send(c *echo.Context, eventType EventType, dataLines []string, opts ...SSEEventOption) error {
