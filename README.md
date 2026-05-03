@@ -34,6 +34,7 @@ Development speed is everything. Andurel eliminates boilerplate and lets you foc
 - **Type Safety Everywhere** - SQLC for SQL, Templ for HTML, Go for logic
 - **Batteries Included** - Echo, Datastar, background jobs, sessions, CSRF protection, telemetry, email support, authentication, optional extensions (workflows, docker, aws-ses)
 - **Just enough Convention** - Convention over configuration is great to a certain point. Andurel provides just enough sensible defaults that just work and get out of your way.
+- **Hypermedia Agnostic** - Switch between **Datastar** and **HTMX** (or use both!) seamlessly. Write your controllers once; Andurel handles the protocol-specific responses (Redirects, SSE, Partials) automatically.
 - **PostgreSQL-Backed** - Built on PostgreSQL with River job queues, pgx driver, and UUID support
 
 The core philosophy around resource generation in andurel, is that it should be a one-time operation that creates everything you need for a fully functional CRUD interface. After that, you can modify and extend the generated code as needed but it's yours to manage going forward.
@@ -300,7 +301,7 @@ myapp/
 │   ├── base_layout.templ    # Base email template layout
 │   └── components.templ     # Reusable email components
 ├── internal/            # Internal framework packages
-│   ├── hypermedia/     # Datastar/SSE helpers
+│   ├── hypermedia/     # Unified Hypermedia (Datastar/HTMX) helpers
 │   ├── renderer/       # Template rendering
 │   ├── routing/        # Routing utilities
 │   ├── server/         # Server configuration
